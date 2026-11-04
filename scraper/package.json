@@ -1,0 +1,21 @@
+{
+  "name": "roleradar-scraper",
+  "version": "1.0.0",
+  "description": "Stealth job scraping script for RoleRadar",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@mistralai/mistralai": "^1.5.0",
+    "dotenv": "^16.4.7",
+    "patchright": "^1.49.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.0"
+  }
+}
+
