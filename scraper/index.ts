@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { chromium } from 'patchright';
+import Groq from 'groq-sdk';
 
 // Interface matching the Prisma schema and Next.js /api/jobs/sync endpoint
 interface ScrapedJob {
@@ -19,6 +20,8 @@ const CONFIG = {
   syncApiUrl: process.env.SYNC_API_URL || 'http://localhost:3000/api/jobs/sync',
   // Bearer authentication key for API access
   apiSecretKey: process.env.API_SECRET_KEY || '',
+  // Groq API Key
+  groqApiKey: process.env.GROQ_API_KEY || '',
 };
 
 async function runScraper(): Promise<void> {
@@ -27,12 +30,19 @@ async function runScraper(): Promise<void> {
   console.log('='.repeat(60));
 
   // 1. Validation checks
+  if (!CONFIG.groqApiKey || CONFIG.groqApiKey === 'your_key_here') {
+    console.error('❌ Missing or default GROQ_API_KEY in environment variables.');
+    console.error('👉 Please set a valid GROQ_API_KEY in your scraper/.env file.');
+    process.exit(1);
+  }
+
   if (!CONFIG.apiSecretKey) {
     console.warn('⚠️  Warning: API_SECRET_KEY is empty. Sync request to /api/jobs/sync might return 401.');
   }
 
   console.log(`🎯 Target Job Board: ${CONFIG.targetUrl}`);
-  console.log(`📡 Sync Endpoint:   ${CONFIG.syncApiUrl}\n`);
+  console.log(`📡 Sync Endpoint:   ${CONFIG.syncApiUrl}`);
+  console.log(`🤖 AI Engine:       Groq (llama-3.3-70b-versatile)\n`);
 
   let browser;
 
@@ -96,17 +106,77 @@ async function runScraper(): Promise<void> {
         ? extractedContent.substring(0, MAX_CHARS) + '\n...[Content truncated for length]'
         : extractedContent;
 
-    // 5. AI structured parsing
-    // =========================================================================
-    // TODO: Insert Groq API extraction here
-    // Use Groq SDK to process `trimmedContent` and parse job postings into `jobs`
-    // =========================================================================
-    const jobs: ScrapedJob[] = [];
+    // 5. Send extracted text to Groq API for structured extraction
+    console.log('🧠 Sending extracted content to Groq (llama-3.3-70b-versatile)...');
+    const groq = new Groq({ apiKey: CONFIG.groqApiKey });
 
-    console.log(`✅ Extracted ${jobs.length} job(s).`);
+    const systemPrompt = `You are an expert job parsing bot.
+Analyze the provided webpage content and extract all job postings into a single JSON object.
+You MUST output ONLY a JSON object containing a "jobs" array.
+Each job object in the array must strictly match this schema:
+- "title": (string) Exact job title (e.g. "Software Engineer")
+- "company": (string) Hiring company name (infer from context or domain)
+- "location": (string or null) Job location (e.g. "Remote", "London, UK"), or null if not found
+- "salary": (string or null) Salary or compensation range if mentioned, otherwise null
+- "link": (string) Direct job application or detail link. Use the link provided in "[LINK: ...]" next to the job title or button. If not found, use the target page URL.
+- "matchScore": (number between 1 and 100 or null) Estimated relevance score based on tech/software engineering roles (e.g. 85 for software/dev roles, lower or null if general).
+
+CRITICAL REQUIREMENT:
+Output ONLY valid JSON. Do not include markdown code fences (\`\`\`json), explanations, or any conversational text outside the JSON.
+
+Expected Format:
+{
+  "jobs": [
+    {
+      "title": "Senior Backend Engineer",
+      "company": "Canonical",
+      "location": "Remote",
+      "salary": "$130,000 - $160,000",
+      "link": "https://boards.greenhouse.io/canonical/jobs/123456",
+      "matchScore": 90
+    }
+  ]
+}`;
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: trimmedContent },
+      ],
+      model: 'llama-3.3-70b-versatile',
+      response_format: { type: 'json_object' },
+    });
+
+    const rawResponse = chatCompletion.choices?.[0]?.message?.content;
+    if (!rawResponse) {
+      throw new Error('Received an empty response from Groq API.');
+    }
+
+    // 6. Safely parse JSON response
+    console.log('📦 Parsing Groq JSON response...');
+    let jobs: ScrapedJob[] = [];
+
+    try {
+      const cleanJson = (typeof rawResponse === 'string' ? rawResponse : JSON.stringify(rawResponse))
+        .replace(/```(?:json)?/gi, '')
+        .replace(/```/g, '')
+        .trim();
+
+      const parsed = JSON.parse(cleanJson);
+      jobs = Array.isArray(parsed)
+        ? parsed
+        : Array.isArray(parsed.jobs)
+        ? parsed.jobs
+        : [];
+    } catch (parseError) {
+      console.error('❌ Failed to parse JSON response from Groq:', rawResponse);
+      throw new Error(`JSON parsing failed: ${(parseError as Error).message}`);
+    }
+
+    console.log(`✅ Successfully extracted ${jobs.length} job(s) from Groq.`);
 
     if (jobs.length === 0) {
-      console.log('ℹ️  No job postings to sync (awaiting Groq integration). Exiting.');
+      console.log('ℹ️  No job postings were detected on this page. Exiting.');
       return;
     }
 
@@ -121,7 +191,7 @@ async function runScraper(): Promise<void> {
     if (jobs.length > 3) console.log(`... and ${jobs.length - 3} more.`);
     console.log('-------------------\n');
 
-    // 6. Send the extracted jobs to Next.js /api/jobs/sync
+    // 7. Send the extracted jobs to Next.js /api/jobs/sync
     console.log(`📤 Sending ${jobs.length} job(s) to ${CONFIG.syncApiUrl}...`);
     const syncResponse = await fetch(CONFIG.syncApiUrl, {
       method: 'POST',
