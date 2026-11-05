@@ -22,6 +22,8 @@ const CONFIG = {
   apiSecretKey: process.env.API_SECRET_KEY || '',
   // Groq API Key
   groqApiKey: process.env.GROQ_API_KEY || '',
+  // Groq model (defaults to openai/gpt-oss-120b)
+  groqModel: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
 };
 
 async function runScraper(): Promise<void> {
@@ -42,7 +44,7 @@ async function runScraper(): Promise<void> {
 
   console.log(`🎯 Target Job Board: ${CONFIG.targetUrl}`);
   console.log(`📡 Sync Endpoint:   ${CONFIG.syncApiUrl}`);
-  console.log(`🤖 AI Engine:       Groq (llama-3.3-70b-versatile)\n`);
+  console.log(`🤖 AI Engine:       Groq (${CONFIG.groqModel})\n`);
 
   let browser;
 
@@ -107,7 +109,7 @@ async function runScraper(): Promise<void> {
         : extractedContent;
 
     // 5. Send extracted text to Groq API for structured extraction
-    console.log('🧠 Sending extracted content to Groq (llama-3.3-70b-versatile)...');
+    console.log(`🧠 Sending extracted content to Groq (${CONFIG.groqModel})...`);
     const groq = new Groq({ apiKey: CONFIG.groqApiKey });
 
     const systemPrompt = `You are an expert job parsing bot.
@@ -143,7 +145,7 @@ Expected Format:
         { role: 'system', content: systemPrompt },
         { role: 'user', content: trimmedContent },
       ],
-      model: 'llama-3.3-70b-versatile',
+      model: CONFIG.groqModel,
       response_format: { type: 'json_object' },
     });
 
