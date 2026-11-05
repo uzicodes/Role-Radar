@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import { chromium } from 'patchright';
-import { Mistral } from '@mistralai/mistralai';
 
 // Interface matching the Prisma schema and Next.js /api/jobs/sync endpoint
 interface ScrapedJob {
@@ -20,10 +19,6 @@ const CONFIG = {
   syncApiUrl: process.env.SYNC_API_URL || 'http://localhost:3000/api/jobs/sync',
   // Bearer authentication key for API access
   apiSecretKey: process.env.API_SECRET_KEY || '',
-  // Mistral API key
-  mistralApiKey: process.env.MISTRAL_API_KEY || '',
-  // Mistral model (mistral-small-latest is fast and cost-effective for structured extraction)
-  mistralModel: process.env.MISTRAL_MODEL || 'mistral-small-latest',
 };
 
 async function runScraper(): Promise<void> {
@@ -32,19 +27,12 @@ async function runScraper(): Promise<void> {
   console.log('='.repeat(60));
 
   // 1. Validation checks
-  if (!CONFIG.mistralApiKey) {
-    console.error('❌ Missing MISTRAL_API_KEY in environment variables.');
-    console.error('👉 Please set MISTRAL_API_KEY in your .env file or environment.');
-    process.exit(1);
-  }
-
   if (!CONFIG.apiSecretKey) {
     console.warn('⚠️  Warning: API_SECRET_KEY is empty. Sync request to /api/jobs/sync might return 401.');
   }
 
   console.log(`🎯 Target Job Board: ${CONFIG.targetUrl}`);
-  console.log(`📡 Sync Endpoint:   ${CONFIG.syncApiUrl}`);
-  console.log(`🤖 Mistral Model:   ${CONFIG.mistralModel}\n`);
+  console.log(`📡 Sync Endpoint:   ${CONFIG.syncApiUrl}\n`);
 
   let browser;
 
@@ -108,80 +96,17 @@ async function runScraper(): Promise<void> {
         ? extractedContent.substring(0, MAX_CHARS) + '\n...[Content truncated for length]'
         : extractedContent;
 
-    // 5. Send extracted text to Mistral AI
-    console.log('🧠 Sending extracted content to Mistral AI for structured parsing...');
-    const mistral = new Mistral({ apiKey: CONFIG.mistralApiKey });
+    // 5. AI structured parsing
+    // =========================================================================
+    // TODO: Insert Groq API extraction here
+    // Use Groq SDK to process `trimmedContent` and parse job postings into `jobs`
+    // =========================================================================
+    const jobs: ScrapedJob[] = [];
 
-    const systemPrompt = `You are an expert recruitment and data extraction AI assistant.
-Your task is to analyze raw text extracted from a company career page and extract all available job postings.
-
-You MUST return a JSON object containing a "jobs" array where each element matches this schema:
-- "title": (string, required) Exact job title (e.g. "Software Engineer", "Product Manager")
-- "company": (string, required) The hiring company name (infer from page header/domain or context)
-- "location": (string or null, optional) Location (e.g. "Remote", "New York, NY", "London, UK")
-- "salary": (string or null, optional) Salary or compensation range if mentioned, otherwise null
-- "link": (string, required) Direct application or job detail link. Use the link provided in "[LINK: ...]" next to the job title or button. If not found, use the target page URL.
-- "matchScore": (integer between 0 and 100 or null, optional) An estimated relevance score based on tech/software engineering roles (e.g., 85 for software/dev roles, lower or null if general).
-
-CRITICAL REQUIREMENT:
-Output ONLY valid JSON. Do not include markdown code fences (\`\`\`json), explanations, or conversational text.
-
-Format:
-{
-  "jobs": [
-    {
-      "title": "Senior Frontend Engineer",
-      "company": "Canonical",
-      "location": "Remote",
-      "salary": "$120,000 - $140,000",
-      "link": "https://boards.greenhouse.io/canonical/jobs/123456",
-      "matchScore": 90
-    }
-  ]
-}`;
-
-    const completion = await mistral.chat.complete({
-      model: CONFIG.mistralModel,
-      responseFormat: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: systemPrompt },
-        {
-          role: 'user',
-          content: `Target Page URL: ${CONFIG.targetUrl}\n\nPage Content:\n${trimmedContent}`,
-        },
-      ],
-    });
-
-    const rawResponse = completion.choices?.[0]?.message?.content;
-    if (!rawResponse) {
-      throw new Error('Received an empty response from Mistral AI.');
-    }
-
-    // 6. Clean and parse JSON response
-    console.log('📦 Parsing Mistral AI JSON response...');
-    const cleanJson = (typeof rawResponse === 'string' ? rawResponse : JSON.stringify(rawResponse))
-      .replace(/```(?:json)?/gi, '')
-      .replace(/```/g, '')
-      .trim();
-
-    let parsedData: { jobs?: ScrapedJob[] } | ScrapedJob[];
-    try {
-      parsedData = JSON.parse(cleanJson);
-    } catch (parseErr) {
-      console.error('Failed to parse Mistral AI JSON output:', cleanJson);
-      throw new Error(`JSON parse error: ${(parseErr as Error).message}`);
-    }
-
-    const jobs: ScrapedJob[] = Array.isArray(parsedData)
-      ? parsedData
-      : Array.isArray(parsedData.jobs)
-      ? parsedData.jobs
-      : [];
-
-    console.log(`✅ Successfully extracted ${jobs.length} job(s) from Mistral AI.`);
+    console.log(`✅ Extracted ${jobs.length} job(s).`);
 
     if (jobs.length === 0) {
-      console.log('ℹ️  No job postings were detected on this page. Exiting.');
+      console.log('ℹ️  No job postings to sync (awaiting Groq integration). Exiting.');
       return;
     }
 
@@ -196,7 +121,7 @@ Format:
     if (jobs.length > 3) console.log(`... and ${jobs.length - 3} more.`);
     console.log('-------------------\n');
 
-    // 7. Send the extracted jobs to Next.js /api/jobs/sync
+    // 6. Send the extracted jobs to Next.js /api/jobs/sync
     console.log(`📤 Sending ${jobs.length} job(s) to ${CONFIG.syncApiUrl}...`);
     const syncResponse = await fetch(CONFIG.syncApiUrl, {
       method: 'POST',
@@ -244,4 +169,3 @@ Format:
 
 // Execute the scraper
 runScraper();
-
