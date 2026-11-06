@@ -5,6 +5,6 @@ export const TARGET_URLS: string[] = [
   "https://vivasoftltd.com/career/#open-position",
   "https://bjitgroup.com/career",
   "https://selisegroup.com/about-us/#selise-career",
-  "https://careers.pathao.com/#position",
-  "https://www.linkedin.com/company/bkash-limited/jobs/",
+  "https://careers.pathao.com/blog/jobs/",
+  "https://www.bkash.com/en/career",
 ];

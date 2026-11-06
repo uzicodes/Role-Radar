@@ -18,9 +18,9 @@ const CONFIG = {
   // Next.js API sync endpoint
   syncApiUrl: process.env.SYNC_API_URL || 'http://localhost:3000/api/jobs/sync',
   // Bearer authentication key for API access
-  apiSecretKey: process.env.API_SECRET_KEY || '',
+  apiSecretKey: (process.env.API_SECRET_KEY || '').trim().replace(/^["']|["']$/g, ''),
   // Groq API Key
-  groqApiKey: process.env.GROQ_API_KEY || '',
+  groqApiKey: (process.env.GROQ_API_KEY || '').trim().replace(/^["']|["']$/g, ''),
   // Groq model (defaults to openai/gpt-oss-120b)
   groqModel: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
 };
@@ -104,9 +104,9 @@ async function runScraper(): Promise<void> {
         // Extract visible body text and annotate links with their URLs (stripping boilerplate)
         console.log('🔍 Stripping boilerplate elements and extracting page content...');
         const extractedContent = await page.evaluate(() => {
-          // Remove boilerplate elements from the DOM
+          // Remove boilerplate elements from the DOM (retaining nav and aside)
           document
-            .querySelectorAll('nav, header, footer, aside, script, style, noscript')
+            .querySelectorAll('header, footer, script, style, noscript, iframe')
             .forEach((el) => el.remove());
 
           // Annotate remaining anchor tags with their resolved URLs
@@ -234,6 +234,11 @@ Expected Format:
 
           if (!syncResponse.ok) {
             console.error(`❌ Sync API returned status ${syncStatus}:`, syncResult);
+            if (syncStatus === 401) {
+              console.error(
+                '👉 401 Unauthorized: Verify that API_SECRET_KEY in scraper/.env matches API_SECRET_KEY in Next.js (.env / Vercel Environment Variables).'
+              );
+            }
             throw new Error(`Failed to sync jobs. API responded with status ${syncStatus}`);
           }
 
