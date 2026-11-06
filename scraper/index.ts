@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { chromium } from 'patchright';
 import Groq from 'groq-sdk';
+import { TARGET_URLS } from './targets';
 
 // Interface matching the Prisma schema and Next.js /api/jobs/sync endpoint
 interface ScrapedJob {
@@ -11,15 +12,6 @@ interface ScrapedJob {
   link: string;
   matchScore?: number | null;
 }
-
-// Target job board URLs to scrape sequentially
-const TARGET_URLS: string[] = [
-  'https://boards.greenhouse.io/canonical',
-  'https://jobs.lever.co/spotify',
-  'https://boards.greenhouse.io/cloudflare',
-  'https://jobs.lever.co/vercel',
-  'https://boards.greenhouse.io/figma',
-];
 
 // Configuration from environment variables with sensible defaults
 const CONFIG = {
@@ -129,13 +121,13 @@ async function runScraper(): Promise<void> {
         // Send extracted text to Groq API
         console.log(`🧠 Sending extracted content to Groq (${CONFIG.groqModel})...`);
 
-        const systemPrompt = `You are an expert job parsing bot.
-Analyze the provided webpage content and extract all job postings into a single JSON object.
+        const systemPrompt = `You are an expert IT recruiter. Extract ALL technology and software-related job postings. This includes Software Engineering, Web Development, DevOps, QA/Testing, Mobile (iOS/Android), Data Science, AI/ML, UI/UX, and IT Infrastructure. Ignore non-technical roles like HR, Finance, or Sales.
+Analyze the provided webpage content and extract all qualifying job postings into a single JSON object.
 You MUST output ONLY a JSON object containing a "jobs" array.
 Each job object in the array must strictly match this schema:
 - "title": (string) Exact job title (e.g. "Software Engineer")
 - "company": (string) Hiring company name (infer from context or domain)
-- "location": (string or null) Job location (e.g. "Remote", "London, UK"), or null if not found
+- "location": (string or null) Job location (e.g. "Remote", "Dhaka, Bangladesh"), or null if not found
 - "salary": (string or null) Salary or compensation range if mentioned, otherwise null
 - "link": (string) Direct job application or detail link. Use the link provided in "[LINK: ...]" next to the job title or button. If not found, use the target page URL.
 - "matchScore": (number between 1 and 100 or null) Estimated relevance score based on tech/software engineering roles (e.g. 85 for software/dev roles, lower or null if general).
@@ -148,10 +140,10 @@ Expected Format:
   "jobs": [
     {
       "title": "Senior Backend Engineer",
-      "company": "Canonical",
-      "location": "Remote",
-      "salary": "$130,000 - $160,000",
-      "link": "https://boards.greenhouse.io/canonical/jobs/123456",
+      "company": "Brain Station 23",
+      "location": "Dhaka, Bangladesh",
+      "salary": "BDT 120,000 - 150,000",
+      "link": "https://brainstation-23.com/career/job-123",
       "matchScore": 90
     }
   ]
