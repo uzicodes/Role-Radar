@@ -42,7 +42,15 @@ async function runScraper(): Promise<void> {
     console.warn('⚠️  Warning: API_SECRET_KEY is empty. Sync request to /api/jobs/sync might return 401.');
   }
 
-  console.log(`📡 Sync Endpoint:   ${CONFIG.syncApiUrl}`);
+  // Resolve clean endpoint URL (automatically appending /api/jobs/sync if missing)
+  const normalizedSyncUrl = (() => {
+    const trimmed = (CONFIG.syncApiUrl || 'http://localhost:3000/api/jobs/sync')
+      .trim()
+      .replace(/\/+$/, '');
+    return trimmed.endsWith('/api/jobs/sync') ? trimmed : `${trimmed}/api/jobs/sync`;
+  })();
+
+  console.log(`📡 Sync Endpoint:   ${normalizedSyncUrl}`);
   console.log(`🤖 AI Engine:       Groq (${CONFIG.groqModel})\n`);
 
   let browser;
@@ -93,11 +101,16 @@ async function runScraper(): Promise<void> {
         // Wait for body to be available and visible
         await page.waitForSelector('body', { timeout: 15000 });
 
-        // Extract visible body text and annotate links with their URLs
-        console.log('🔍 Extracting page content and job links...');
+        // Extract visible body text and annotate links with their URLs (stripping boilerplate)
+        console.log('🔍 Stripping boilerplate elements and extracting page content...');
         const extractedContent = await page.evaluate(() => {
-          const clone = document.body.cloneNode(true) as HTMLElement;
-          const anchors = clone.querySelectorAll('a');
+          // Remove boilerplate elements from the DOM
+          document
+            .querySelectorAll('nav, header, footer, aside, script, style, noscript')
+            .forEach((el) => el.remove());
+
+          // Annotate remaining anchor tags with their resolved URLs
+          const anchors = document.querySelectorAll('a');
           anchors.forEach((a) => {
             const href = a.href;
             const text = a.textContent?.trim() || '';
@@ -105,7 +118,8 @@ async function runScraper(): Promise<void> {
               a.textContent = `${text} [LINK: ${href}]`;
             }
           });
-          return clone.innerText || document.body.innerText || '';
+
+          return document.body?.innerText || '';
         });
 
         console.log(`📊 Extracted ~${extractedContent.length} characters of text from page.`);
@@ -198,8 +212,8 @@ Expected Format:
           if (jobs.length > 3) console.log(`... and ${jobs.length - 3} more.`);
           console.log('-------------------\n');
 
-          console.log(`📤 Sending ${jobs.length} job(s) to ${CONFIG.syncApiUrl}...`);
-          const syncResponse = await fetch(CONFIG.syncApiUrl, {
+          console.log(`📤 Sending ${jobs.length} job(s) to ${normalizedSyncUrl}...`);
+          const syncResponse = await fetch(normalizedSyncUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
