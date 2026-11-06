@@ -78,14 +78,17 @@ async function runScraper(): Promise<void> {
         // Create new page for this URL
         page = await context.newPage();
 
-        // Navigate to target URL and wait for network to settle
+        // Navigate to target URL and wait for DOM content to load
         console.log(`⏳ Navigating to ${url}...`);
         const response = await page.goto(url, {
-          waitUntil: 'networkidle',
+          waitUntil: 'domcontentloaded',
           timeout: 60000,
         });
 
         console.log(`📄 Response status: ${response?.status() ?? 'N/A'}`);
+
+        // Allow dynamic rendering for React/SPA sites (e.g. Pathao)
+        await page.waitForTimeout(3000);
 
         // Wait for body to be available and visible
         await page.waitForSelector('body', { timeout: 15000 });
@@ -111,12 +114,8 @@ async function runScraper(): Promise<void> {
           throw new Error('Page body is empty or could not be extracted.');
         }
 
-        // Truncate to stay safely within token limits (keeps first ~40,000 chars)
-        const MAX_CHARS = 40000;
-        const trimmedContent =
-          extractedContent.length > MAX_CHARS
-            ? extractedContent.substring(0, MAX_CHARS) + '\n...[Content truncated for length]'
-            : extractedContent;
+        // Truncate to 12,000 characters to stay comfortably under Groq's token limits
+        const safeContent = extractedContent.slice(0, 12000);
 
         // Send extracted text to Groq API
         console.log(`🧠 Sending extracted content to Groq (${CONFIG.groqModel})...`);
@@ -152,7 +151,7 @@ Expected Format:
         const chatCompletion = await groq.chat.completions.create({
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Target URL: ${url}\n\nContent:\n${trimmedContent}` },
+            { role: 'user', content: `Target URL: ${url}\n\nContent:\n${safeContent}` },
           ],
           model: CONFIG.groqModel,
           response_format: { type: 'json_object' },
@@ -210,12 +209,13 @@ Expected Format:
           });
 
           const syncStatus = syncResponse.status;
+          const responseText = await syncResponse.text();
           let syncResult: any;
 
           try {
-            syncResult = await syncResponse.json();
+            syncResult = JSON.parse(responseText);
           } catch {
-            syncResult = await syncResponse.text();
+            syncResult = responseText;
           }
 
           if (!syncResponse.ok) {
