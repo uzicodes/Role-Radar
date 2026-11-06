@@ -39,5 +39,4 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           API_SECRET_KEY: ${{ secrets.API_SECRET_KEY }}
           SYNC_API_URL: ${{ secrets.SYNC_API_URL }}
-          TARGET_JOB_BOARD_URL: ${{ secrets.TARGET_JOB_BOARD_URL }}
 
