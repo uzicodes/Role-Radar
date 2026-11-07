@@ -38,17 +38,15 @@ export async function POST(req: Request) {
       skipDuplicates: true, // Silently skips jobs where the URL already exists
     });
 
-    // 4. Filter for high-match opportunities (matchScore >= 85)
-    const topJobs = newJobs.filter(
-      (job) => job.matchScore !== null && job.matchScore >= 85
-    );
+    // 4. Alert on all newly synced jobs
+    const jobsToEmail = newJobs;
 
-    // 5. Send email alert via Resend if top jobs exist
-    if (topJobs.length > 0) {
+    // 5. Send email alert via Resend for all synced jobs
+    if (jobsToEmail.length > 0) {
       try {
         if (!process.env.RESEND_API_KEY || !process.env.ALERT_EMAIL) {
           console.warn(
-            '⚠️ Top jobs detected, but RESEND_API_KEY or ALERT_EMAIL is missing. Skipping email alert.'
+            '⚠️ New jobs detected, but RESEND_API_KEY or ALERT_EMAIL is missing. Skipping email alert.'
           );
         } else {
           // Construct HTML email body
@@ -57,12 +55,12 @@ export async function POST(req: Request) {
               <div style="border-bottom: 1px solid #27272a; padding-bottom: 16px; margin-bottom: 20px;">
                 <h1 style="color: #10b981; margin: 0; font-size: 22px; font-weight: 700;">RoleRadar Alert</h1>
                 <p style="color: #a1a1aa; margin: 6px 0 0 0; font-size: 14px;">
-                  We found <strong>${topJobs.length}</strong> top matching ${topJobs.length === 1 ? 'role' : 'roles'} (&ge; 85% match)!
+                  We found <strong>${jobsToEmail.length}</strong> new ${jobsToEmail.length === 1 ? 'job' : 'jobs'} on your radar!
                 </p>
               </div>
               
               <div style="margin-bottom: 20px;">
-                ${topJobs
+                ${jobsToEmail
                   .map(
                     (job) => `
                   <div style="background-color: #18181b; border: 1px solid #27272a; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
@@ -72,11 +70,16 @@ export async function POST(req: Request) {
                       ${job.location ? `<span style="color: #71717a; font-size: 13px;"> &bull; ${job.location}</span>` : ''}
                       ${job.salary ? `<span style="color: #34d399; font-size: 13px;"> &bull; ${job.salary}</span>` : ''}
                     </div>
+                    ${
+                      job.matchScore
+                        ? `
                     <div style="margin-bottom: 12px;">
                       <span style="display: inline-block; background-color: rgba(16, 185, 129, 0.15); color: #34d399; padding: 3px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.3);">
                         ${job.matchScore}% Match
                       </span>
-                    </div>
+                    </div>`
+                        : ''
+                    }
                     <div>
                       <a href="${job.link}" target="_blank" style="display: inline-block; background-color: #10b981; color: #090a0f; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 12px;">View Application &rarr;</a>
                     </div>
@@ -95,11 +98,11 @@ export async function POST(req: Request) {
           await resend.emails.send({
             from: 'RoleRadar <onboarding@resend.dev>',
             to: process.env.ALERT_EMAIL,
-            subject: `RoleRadar: Found ${topJobs.length} Top ${topJobs.length === 1 ? 'Match' : 'Matches'}!`,
+            subject: `RoleRadar: Found ${jobsToEmail.length} New ${jobsToEmail.length === 1 ? 'Job' : 'Jobs'}!`,
             html: emailHtml,
           });
 
-          console.log(`✉️ Email alert sent to ${process.env.ALERT_EMAIL} for ${topJobs.length} top job(s).`);
+          console.log(`✉️ Email alert sent to ${process.env.ALERT_EMAIL} for ${jobsToEmail.length} job(s).`);
         }
       } catch (emailError) {
         console.error('Failed to send Resend email alert:', emailError);
@@ -110,7 +113,7 @@ export async function POST(req: Request) {
       success: true, 
       received: jobs.length, 
       added: result.count,
-      topMatches: topJobs.length,
+      emailed: jobsToEmail.length,
     });
 
   } catch (error) {
