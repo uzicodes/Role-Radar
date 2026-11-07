@@ -1,4 +1,4 @@
-// Career pages of top Bangladeshi tech companies
+
 export const TARGET_URLS: string[] = [
   "https://brainstation-23.easy.jobs",
   "https://careers.enosisbd.com",
@@ -7,4 +7,5 @@ export const TARGET_URLS: string[] = [
   "https://selisegroup.com/about-us/#selise-career",
   "https://careers.pathao.com/blog/jobs/",
   "https://www.bkash.com/en/career",
+  "https://life.exabyting.com/open-roles"
 ];
