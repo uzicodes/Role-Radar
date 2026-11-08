@@ -29,10 +29,7 @@ function JobsSkeleton() {
             className="flex flex-col justify-between rounded-xl border border-neutral-800/80 bg-neutral-900/40 p-5 space-y-4"
           >
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <div className="h-3.5 w-24 bg-neutral-800 rounded" />
-                <div className="h-5 w-20 bg-neutral-800 rounded-full" />
-              </div>
+              <div className="h-3.5 w-24 bg-neutral-800 rounded" />
               <div className="h-5 w-3/4 bg-neutral-800 rounded" />
               <div className="flex gap-2 pt-1">
                 <div className="h-6 w-20 bg-neutral-800/70 rounded-md" />

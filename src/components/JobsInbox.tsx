@@ -31,30 +31,6 @@ function formatDate(date: Date | string): string {
   }).format(new Date(date));
 }
 
-function MatchScoreBadge({ score }: { score: number | null }) {
-  if (score === null || score === undefined) return null;
-
-  let colorClasses = "bg-rose-500/15 text-rose-400 border-rose-500/30";
-  let dotColor = "bg-rose-400";
-
-  if (score >= 80) {
-    colorClasses = "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
-    dotColor = "bg-emerald-400";
-  } else if (score >= 60) {
-    colorClasses = "bg-yellow-500/15 text-yellow-400 border-yellow-500/30";
-    dotColor = "bg-yellow-400";
-  }
-
-  return (
-    <div
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${colorClasses}`}
-    >
-      <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
-      <span>{score}% Match</span>
-    </div>
-  );
-}
-
 export default function JobsInbox({ jobs }: JobsInboxProps) {
   // 1. State for selected calendar date (YYYY-MM-DD format) defaulting to today
   const [selectedDate, setSelectedDate] = useState<string>(() => getTodayYMD());
@@ -187,12 +163,29 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
             >
               {/* Card Header & Content */}
               <div>
-                {/* Top row: Company & Match Score Badge */}
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400 truncate">
-                    {job.company}
+                {/* Top row: Location */}
+                <div className="flex items-center justify-between gap-3 mb-2.5">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium tracking-wide text-emerald-400/90 truncate">
+                    <svg
+                      className="w-3 h-3 text-emerald-400/80 shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    <span className="truncate">{job.location || "Location N/A"}</span>
                   </span>
-                  <MatchScoreBadge score={job.matchScore} />
                 </div>
 
                 {/* Job Title */}
@@ -200,53 +193,46 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                   {job.title}
                 </h3>
 
-                {/* Location & Salary Badges */}
-                {(job.location || job.salary) && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {job.location && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-neutral-800 text-neutral-300 border border-neutral-700/60">
-                        <svg
-                          className="w-3.5 h-3.5 text-neutral-400 shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
-                        <span className="truncate max-w-[170px]">{job.location}</span>
-                      </span>
-                    )}
+                {/* Company & Salary Badges */}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {job.company && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-neutral-800 text-neutral-300 border border-neutral-700/60">
+                      <svg
+                        className="w-3.5 h-3.5 text-neutral-400 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
+                      </svg>
+                      <span className="truncate max-w-[170px] font-semibold text-neutral-200">{job.company}</span>
+                    </span>
+                  )}
 
-                    {job.salary && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-950/40 text-emerald-300 border border-emerald-800/40">
-                        <svg
-                          className="w-3.5 h-3.5 text-emerald-400 shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span className="truncate max-w-[170px]">{job.salary}</span>
-                      </span>
-                    )}
-                  </div>
-                )}
+                  {job.salary && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-950/40 text-emerald-300 border border-emerald-800/40">
+                      <svg
+                        className="w-3.5 h-3.5 text-emerald-400 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <span className="truncate max-w-[170px]">{job.salary}</span>
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Card Footer: Timestamp & Action Button */}
