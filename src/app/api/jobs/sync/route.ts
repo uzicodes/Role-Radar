@@ -21,6 +21,19 @@ export async function POST(req: Request) {
     }
 
     // 3. Format and bulk insert to Neon PostgreSQL, ignoring duplicate URLs
+    // Generate date string in 'Asia/Dhaka' timezone (e.g., "Nov 8 2026")
+    const dhakaParts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Dhaka',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).formatToParts(new Date());
+
+    const month = dhakaParts.find((p) => p.type === 'month')?.value || '';
+    const day = dhakaParts.find((p) => p.type === 'day')?.value || '';
+    const year = dhakaParts.find((p) => p.type === 'year')?.value || '';
+    const currentDhakaDate = `${month} ${day} ${year}`.trim();
+
     const newJobs = jobs.map((job: any) => ({
       title: String(job.title),
       company: String(job.company),
@@ -31,6 +44,7 @@ export async function POST(req: Request) {
         job.matchScore !== null && job.matchScore !== undefined
           ? Number(job.matchScore)
           : null,
+      scrapedDate: currentDhakaDate,
     }));
 
     const result = await prisma.job.createMany({
