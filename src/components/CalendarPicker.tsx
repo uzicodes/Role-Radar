@@ -15,24 +15,16 @@ function formatYMD(year: number, monthIndex: number, day: number): string {
   return `${y}-${m}-${d}`;
 }
 
-export function parseYMDToScrapedDate(ymd: string): string {
-  if (!ymd) return "";
-  const [year, month, day] = ymd.split("-").map(Number);
-  if (!year || !month || !day) return "";
-
-  const date = new Date(year, month - 1, day);
-  const parts = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).formatToParts(date);
-
-  const m = parts.find((p) => p.type === "month")?.value || "";
-  const d = parts.find((p) => p.type === "day")?.value || "";
-  const y = parts.find((p) => p.type === "year")?.value || "";
-
-  return `${m} ${d} ${y}`.trim();
+export function getDbDateString(dateInput: string) {
+  if (!dateInput) return "";
+  const [year, month, day] = dateInput.split("-");
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthStr = months[parseInt(month, 10) - 1];
+  const dayStr = parseInt(day, 10).toString(); // Removes leading zeros (e.g., "08" -> "8")
+  return `${monthStr} ${dayStr} ${year}`;
 }
+
+export const parseYMDToScrapedDate = getDbDateString;
 
 export function getTodayYMD(): string {
   const now = new Date();
@@ -149,7 +141,7 @@ export default function CalendarPicker({
           const isToday = dateYmd === todayYMD;
 
           // Check if jobs exist on this day
-          const scrapedKey = parseYMDToScrapedDate(dateYmd);
+          const scrapedKey = getDbDateString(dateYmd);
           const hasJobs = datesWithJobs ? datesWithJobs.has(scrapedKey) : false;
 
           let btnStyles = "text-neutral-300 hover:bg-neutral-800 hover:text-white";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import CalendarPicker, { getTodayYMD, parseYMDToScrapedDate } from "./CalendarPicker";
+import CalendarPicker, { getTodayYMD, getDbDateString } from "./CalendarPicker";
 
 export interface JobItem {
   id: string;
@@ -59,8 +59,8 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
   // 1. State for selected calendar date (YYYY-MM-DD format) defaulting to today
   const [selectedDate, setSelectedDate] = useState<string>(() => getTodayYMD());
 
-  // 2. Format selected date into "MMM D YYYY" (e.g. "Nov 8 2026")
-  const formattedSelectedDate = parseYMDToScrapedDate(selectedDate);
+  // 2. Format selected date into "MMM D YYYY" (e.g. "Nov 8 2026") using pure string manipulation
+  const formattedSelectedDate = getDbDateString(selectedDate);
 
   // 3. Collect unique scrapedDate strings from the jobs database for calendar indicators
   const datesWithJobs = useMemo(() => {
