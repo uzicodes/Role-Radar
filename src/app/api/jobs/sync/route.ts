@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     const year = dhakaParts.find((p) => p.type === 'year')?.value || '';
     const currentDhakaDate = `${month} ${day} ${year}`.trim();
 
-    const newJobs = jobs.map((job: any) => ({
+    const newJobs = jobs.map((job: Record<string, unknown>) => ({
       title: String(job.title),
       company: String(job.company),
       location: job.location ? String(job.location) : null,

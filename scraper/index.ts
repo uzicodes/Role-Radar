@@ -224,7 +224,7 @@ Expected Format:
 
           const syncStatus = syncResponse.status;
           const responseText = await syncResponse.text();
-          let syncResult: any;
+          let syncResult: unknown;
 
           try {
             syncResult = JSON.parse(responseText);
