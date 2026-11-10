@@ -2,13 +2,16 @@ name: RoleRadar Auto-Scraper
 
 on:
   schedule:
-    # Runs at 8 AM, 12 PM, and 8 PM Bangladesh Standard Time (UTC+6)
+    # 3 daily scraper runs: 8:00 AM, 12:00 PM, and 8:00 PM BST (UTC+6) -> 02:00, 06:00, 14:00 UTC
     - cron: '0 2,6,14 * * *'
+    # Daily email digest run: 9:00 PM BST (UTC+6) -> 15:00 UTC
+    - cron: '0 15 * * *'
   workflow_dispatch:
 
 jobs:
   scrape:
     name: Run Scraper
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule != '0 15 * * *'
     runs-on: ubuntu-latest
 
     defaults:
@@ -39,3 +42,16 @@ jobs:
           API_SECRET_KEY: ${{ secrets.API_SECRET_KEY }}
           SYNC_API_URL: ${{ secrets.SYNC_API_URL }}
 
+  daily-digest:
+    name: Trigger Daily Digest
+    if: |
+      always() &&
+      (github.event.schedule == '0 15 * * *' ||
+       (github.event_name == 'workflow_dispatch' && needs.scrape.result == 'success'))
+    needs: [scrape]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Daily Email Digest
+        run: |
+          curl -X GET https://roleradar-dev.vercel.app/api/jobs/daily-digest \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
