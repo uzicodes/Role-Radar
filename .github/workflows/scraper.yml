@@ -4,7 +4,7 @@ on:
   schedule:
     # 3 daily scraper runs: 8:00 AM, 12:00 PM, and 8:00 PM BST (UTC+6) -> 02:00, 06:00, 14:00 UTC
     - cron: '0 2,6,14 * * *'
-    # Daily email digest run: 9:00 PM BST (UTC+6) -> 15:00 UTC
+    # Standalone daily email digest run: 9:00 PM BST (UTC+6) -> 15:00 UTC
     - cron: '0 15 * * *'
   workflow_dispatch:
 
@@ -44,6 +44,7 @@ jobs:
 
   daily-digest:
     name: Trigger Daily Digest
+    # Runs as a standalone job at 9:00 PM BST (15:00 UTC), or after scraping on manual workflow_dispatch
     if: |
       always() &&
       (github.event.schedule == '0 15 * * *' ||
@@ -52,6 +53,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Daily Email Digest
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          curl -X GET https://roleradar-dev.vercel.app/api/jobs/daily-digest \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+          curl -i -X GET https://roleradar-dev.vercel.app/api/jobs/daily-digest \
+            -H "Authorization: Bearer $CRON_SECRET"

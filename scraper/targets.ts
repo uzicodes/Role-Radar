@@ -34,5 +34,6 @@ export const TARGET_URLS: string[] = [
   "https://www.ipay.com.bd/career#openings",
   "https://ixorasolution.com/career/",
   "https://jatri.co/career#job-opening",
-  "https://konasl.com/careers#openings"
+  "https://konasl.com/careers#openings",
+  "https://indetechs.com/career?department=1#career-open-roles",
 ];

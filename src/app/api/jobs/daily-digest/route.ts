@@ -13,15 +13,21 @@ function escapeHtml(str: string): string {
 
 export async function GET(request: Request) {
   try {
-    // 1. Security Check: Authenticate via Bearer CRON_SECRET
+    // 1. Authentication Check: Validate Bearer CRON_SECRET
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret) {
+      console.error('[Daily Digest] Server error: CRON_SECRET is not configured in environment variables.');
+      return NextResponse.json({ error: 'Unauthorized: CRON_SECRET not configured' }, { status: 401 });
+    }
+
+    if (authHeader !== `Bearer ${cronSecret}`) {
+      console.warn(`[Daily Digest] Unauthorized access attempt with invalid or missing token.`);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 2. Calculate today's date in 'Asia/Dhaka' timezone (matches format "MMM D YYYY", e.g. "Nov 10 2026")
+    // 2. Date String Formatting: Format today's date in 'Asia/Dhaka' timezone as "MMM D YYYY" (e.g., "Nov 12 2026")
     const dhakaParts = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Dhaka',
       month: 'short',
@@ -32,31 +38,45 @@ export async function GET(request: Request) {
     const month = dhakaParts.find((p) => p.type === 'month')?.value || '';
     const day = dhakaParts.find((p) => p.type === 'day')?.value || '';
     const year = dhakaParts.find((p) => p.type === 'year')?.value || '';
-    const todayDhakaDate = `${month} ${day} ${year}`.trim();
+    const todayString = `${month} ${day} ${year}`.trim();
 
-    // 3. Query Prisma for all jobs synced today, ordered by newest first
+    console.log(`[Daily Digest] Running daily digest for date: "${todayString}"`);
+
+    // 3. Database Query: Fetch all jobs synced today, newest first
     const jobs = await prisma.job.findMany({
       where: {
-        scrapedDate: todayDhakaDate,
+        scrapedDate: todayString,
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    // 4. If no jobs were found for today, skip sending email
+    console.log(`[Daily Digest] Queried database for scrapedDate="${todayString}". Found ${jobs.length} job(s).`);
+
+    // 4. No Jobs Fallback: Skip sending email if database has 0 jobs for today
     if (jobs.length === 0) {
-      return NextResponse.json({ message: 'No jobs synced today. Skipping email.' });
+      console.log(`[Daily Digest] No jobs found for today (${todayString}). Skipping email.`);
+      return NextResponse.json({
+        success: true,
+        message: 'No jobs synced today. Skipping email.',
+        count: 0,
+      });
     }
 
-    // 5. Verify Resend credentials
+    // 5. Verify Resend environment variables
     const resendApiKey = process.env.RESEND_API_KEY;
     const alertEmail = process.env.ALERT_EMAIL;
 
     if (!resendApiKey || !alertEmail) {
-      console.error('RESEND_API_KEY or ALERT_EMAIL environment variable is missing.');
+      console.error(
+        `[Daily Digest] Configuration missing: RESEND_API_KEY present: ${Boolean(resendApiKey)}, ALERT_EMAIL present: ${Boolean(alertEmail)}`
+      );
       return NextResponse.json(
-        { error: 'Email service is not configured (missing RESEND_API_KEY or ALERT_EMAIL)' },
+        {
+          success: false,
+          error: 'Email service not configured (missing RESEND_API_KEY or ALERT_EMAIL)',
+        },
         { status: 500 }
       );
     }
@@ -137,7 +157,7 @@ export async function GET(request: Request) {
                   RoleRadar
                 </h1>
                 <p style="margin: 6px 0 0 0; font-size: 14px; color: rgba(164, 240, 2, 0.75);">
-                  ${todayDhakaDate} &bull; <strong style="color: #A4F002;">${jobs.length}</strong> ${jobs.length === 1 ? 'role' : 'roles'} captured today
+                  ${todayString} &bull; <strong style="color: #A4F002;">${jobs.length}</strong> ${jobs.length === 1 ? 'role' : 'roles'} captured today
                 </p>
               </div>
 
@@ -158,27 +178,44 @@ export async function GET(request: Request) {
       </html>
     `;
 
-    // 7. Send exactly ONE consolidated daily digest email via Resend
-    const roleCountText = `${jobs.length} ${jobs.length === 1 ? 'Role' : 'Roles'} Found`;
-    const emailSubject = `RoleRadar Daily Digest - ${todayDhakaDate} (${roleCountText})`;
+    // 7. Email Execution & Error Handling with Diagnostic Logging
+    const subject = `RoleRadar Daily Digest - ${todayString} (${jobs.length} Roles Found)`;
+    console.log(`[Daily Digest] Sending digest email to "${alertEmail}" with subject: "${subject}"...`);
 
-    const sendResponse = await resend.emails.send({
+    const { data, error: resendError } = await resend.emails.send({
       from: 'RoleRadar <onboarding@resend.dev>',
       to: alertEmail,
-      subject: emailSubject,
+      subject,
       html: emailHtml,
     });
 
+    if (resendError) {
+      console.error('[Daily Digest] Resend API Error returned:', resendError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: resendError.message,
+          name: resendError.name,
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log(`[Daily Digest] Digest email sent successfully. Resend ID: ${data?.id}`);
+
     return NextResponse.json({
       success: true,
-      date: todayDhakaDate,
+      message: 'Digest email sent successfully',
       count: jobs.length,
-      emailId: sendResponse.data?.id,
+      emailId: data?.id,
     });
   } catch (error) {
-    console.error('Daily Digest Error:', error);
+    console.error('[Daily Digest] Internal Server Error:', error);
     return NextResponse.json(
-      { error: 'Internal server error while compiling daily digest' },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Internal server error while compiling daily digest',
+      },
       { status: 500 }
     );
   }
