@@ -22,23 +22,22 @@ function JobsSkeleton() {
       </div>
 
       {/* Grid Skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {[...Array(6)].map((_, i) => (
           <div
             key={i}
-            className="flex flex-col justify-between rounded-xl border border-[#00574f]/50 bg-[#00332e]/40 p-5 space-y-4"
+            className="flex flex-col justify-between rounded-xl border border-[#00574f]/50 bg-[#00332e]/40 p-4 space-y-3"
           >
-            <div className="space-y-3">
-              <div className="h-3.5 w-24 bg-[#004d45] rounded" />
-              <div className="h-5 w-3/4 bg-[#004d45] rounded" />
-              <div className="flex gap-2 pt-1">
-                <div className="h-6 w-20 bg-[#004d45]/70 rounded-md" />
-                <div className="h-6 w-24 bg-[#004d45]/70 rounded-md" />
+            <div className="space-y-2.5">
+              <div className="flex justify-between items-center">
+                <div className="h-3 w-16 bg-[#004d45] rounded" />
+                <div className="h-3 w-20 bg-[#004d45]/70 rounded" />
               </div>
+              <div className="h-5 w-3/4 bg-[#004d45] rounded" />
             </div>
-            <div className="pt-4 border-t border-[#00574f]/40 flex justify-between items-center">
-              <div className="h-3.5 w-28 bg-[#004d45] rounded" />
-              <div className="h-7 w-24 bg-[#004d45] rounded-lg" />
+            <div className="pt-2.5 border-t border-[#00574f]/40 flex justify-between items-center">
+              <div className="h-6 w-24 bg-[#004d45] rounded-md" />
+              <div className="h-6 w-20 bg-[#004d45] rounded-lg" />
             </div>
           </div>
         ))}

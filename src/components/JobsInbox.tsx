@@ -31,6 +31,12 @@ function formatDate(date: Date | string): string {
   }).format(new Date(date));
 }
 
+function getCity(location: string | null): string {
+  if (!location) return "Remote";
+  const city = location.split(/[,/]/)[0]?.trim();
+  return city || "Remote";
+}
+
 export default function JobsInbox({ jobs }: JobsInboxProps) {
   // 1. State for selected calendar date (YYYY-MM-DD format) defaulting to today
   const [selectedDate, setSelectedDate] = useState<string>(() => getTodayYMD());
@@ -148,16 +154,15 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
         </div>
       ) : (
         /* Responsive CSS Grid */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredJobs.map((job) => (
             <div
               key={job.id}
-              className="group flex flex-col justify-between rounded-xl border border-[#00574f]/80 bg-[#00332e]/70 p-5 shadow-lg shadow-black/30 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#A4F002]/70 hover:bg-[#003833]"
+              className="group flex flex-col justify-between rounded-xl border border-[#00574f]/80 bg-[#00332e]/70 p-4 shadow-lg shadow-black/30 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#A4F002]/70 hover:bg-[#003833]"
             >
-              {/* Card Header & Content */}
               <div>
-                {/* Top row: Location */}
-                <div className="flex items-center justify-between gap-3 mb-2.5">
+                {/* Top row: City Location (Left) & Time (Right) */}
+                <div className="flex items-center justify-between gap-2 mb-2">
                   <span className="inline-flex items-center gap-1 text-[11px] font-medium tracking-wide text-[#A4F002]/90 truncate">
                     <svg
                       className="w-3 h-3 text-[#A4F002] shrink-0"
@@ -177,21 +182,31 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                         d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                       />
                     </svg>
-                    <span className="truncate">{job.location || "Location N/A"}</span>
+                    <span className="truncate">{getCity(job.location)}</span>
+                  </span>
+
+                  <span
+                    className="text-[11px] text-[#A4F002]/60 font-mono shrink-0"
+                    suppressHydrationWarning
+                    title={new Date(job.createdAt).toISOString()}
+                  >
+                    {formatDate(job.createdAt)}
                   </span>
                 </div>
 
                 {/* Job Title */}
-                <h3 className="text-lg font-bold text-white group-hover:text-[#A4F002] transition-colors line-clamp-2 leading-snug">
+                <h3 className="text-base font-bold text-white group-hover:text-[#A4F002] transition-colors line-clamp-2 leading-snug mb-3">
                   {job.title}
                 </h3>
+              </div>
 
-                {/* Company & Salary Badges */}
-                <div className="mt-3 flex flex-wrap gap-2">
+              {/* Bottom Row: Company & Salary (Left) & View Role Button (Right) */}
+              <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-[#00574f]/50">
+                <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
                   {job.company && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-[#002622] text-[#A4F002] border border-[#00574f]">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-[#002622] text-[#A4F002] border border-[#00574f] truncate max-w-[150px]">
                       <svg
-                        className="w-3.5 h-3.5 text-[#A4F002]/80 shrink-0"
+                        className="w-3 h-3 text-[#A4F002]/80 shrink-0"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -203,14 +218,14 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                           d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                         />
                       </svg>
-                      <span className="truncate max-w-[170px]">{job.company}</span>
+                      <span className="truncate">{job.company}</span>
                     </span>
                   )}
 
                   {job.salary && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-[#002622] text-[#A4F002] border border-[#00574f]">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-[#002622] text-[#A4F002] border border-[#00574f] truncate max-w-[120px]">
                       <svg
-                        className="w-3.5 h-3.5 text-[#A4F002]/80 shrink-0"
+                        className="w-3 h-3 text-[#A4F002]/80 shrink-0"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -222,31 +237,20 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                           d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      <span className="truncate max-w-[170px]">{job.salary}</span>
+                      <span className="truncate">{job.salary}</span>
                     </span>
                   )}
                 </div>
-              </div>
-
-              {/* Card Footer: Timestamp & Action Button */}
-              <div className="mt-5 pt-4 border-t border-[#00574f]/60 flex items-center justify-between gap-3">
-                <span
-                  className="text-xs text-[#A4F002]/60 font-mono truncate"
-                  suppressHydrationWarning
-                  title={new Date(job.createdAt).toISOString()}
-                >
-                  {formatDate(job.createdAt)}
-                </span>
 
                 <a
                   href={job.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-extrabold bg-[#A4F002] hover:bg-[#b7ff1f] text-[#00403A] transition-all shadow-md shrink-0 active:scale-95"
+                  className="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-lg text-xs font-extrabold bg-[#A4F002] hover:bg-[#b7ff1f] text-[#00403A] transition-all shadow-md shrink-0 active:scale-95"
                 >
                   <span>View Role</span>
                   <svg
-                    className="w-3.5 h-3.5"
+                    className="w-3 h-3"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
