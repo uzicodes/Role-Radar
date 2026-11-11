@@ -87,13 +87,13 @@ export default function CalendarPicker({
   const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay();
 
   return (
-    <div className="w-full max-w-[320px] rounded-2xl bg-neutral-900/90 border border-neutral-800 p-4 shadow-xl backdrop-blur-md">
+    <div className="w-full max-w-[320px] rounded-2xl bg-[#00332e]/90 border border-[#00574f]/80 p-4 shadow-xl backdrop-blur-md">
       {/* Month & Year Navigation Header */}
-      <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-neutral-800">
+      <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#00574f]/80">
         <button
           type="button"
           onClick={handlePrevMonth}
-          className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors focus:outline-none"
+          className="p-1.5 rounded-lg text-[#A4F002]/70 hover:text-[#A4F002] hover:bg-[#004d45] transition-colors focus:outline-none"
           title="Previous month"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -101,14 +101,14 @@ export default function CalendarPicker({
           </svg>
         </button>
 
-        <span className="text-xs sm:text-sm font-semibold text-neutral-100 tracking-wide">
+        <span className="text-xs sm:text-sm font-semibold text-[#A4F002] tracking-wide">
           {MONTH_NAMES[viewMonth]} {viewYear}
         </span>
 
         <button
           type="button"
           onClick={handleNextMonth}
-          className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors focus:outline-none"
+          className="p-1.5 rounded-lg text-[#A4F002]/70 hover:text-[#A4F002] hover:bg-[#004d45] transition-colors focus:outline-none"
           title="Next month"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -120,7 +120,7 @@ export default function CalendarPicker({
       {/* Weekday Names Header */}
       <div className="grid grid-cols-7 gap-1 text-center mb-1">
         {DAY_LABELS.map((day) => (
-          <span key={day} className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider py-0.5">
+          <span key={day} className="text-[10px] font-semibold text-[#A4F002]/60 uppercase tracking-wider py-0.5">
             {day}
           </span>
         ))}
@@ -144,12 +144,12 @@ export default function CalendarPicker({
           const scrapedKey = getDbDateString(dateYmd);
           const hasJobs = datesWithJobs ? datesWithJobs.has(scrapedKey) : false;
 
-          let btnStyles = "text-neutral-300 hover:bg-neutral-800 hover:text-white";
+          let btnStyles = "text-[#A4F002]/80 hover:bg-[#004d45] hover:text-[#A4F002]";
 
           if (isSelected) {
-            btnStyles = "bg-emerald-500 text-neutral-950 font-bold shadow-md shadow-emerald-500/25";
+            btnStyles = "bg-[#A4F002] text-[#00403A] font-bold shadow-md shadow-[#A4F002]/25";
           } else if (isToday) {
-            btnStyles = "border border-emerald-500/50 text-emerald-400 font-semibold hover:bg-emerald-500/10";
+            btnStyles = "border border-[#A4F002]/60 text-[#A4F002] font-semibold hover:bg-[#A4F002]/10";
           }
 
           return (
@@ -167,7 +167,7 @@ export default function CalendarPicker({
               {hasJobs && (
                 <span
                   className={`absolute bottom-0.5 w-1 h-1 rounded-full ${
-                    isSelected ? "bg-neutral-950" : "bg-emerald-400"
+                    isSelected ? "bg-[#00403A]" : "bg-[#A4F002]"
                   }`}
                 />
               )}
@@ -177,9 +177,9 @@ export default function CalendarPicker({
       </div>
 
       {/* Footer / Legend */}
-      <div className="mt-2.5 pt-2 border-t border-neutral-800/80 flex items-center justify-between text-[11px] text-neutral-400">
+      <div className="mt-2.5 pt-2 border-t border-[#00574f]/80 flex items-center justify-between text-[11px] text-[#A4F002]/70">
         <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#A4F002]" />
           <span>Synced roles</span>
         </div>
 
@@ -190,7 +190,7 @@ export default function CalendarPicker({
               onSelectDate(todayYMD);
               setNavYearMonth(null);
             }}
-            className="text-emerald-400 hover:text-emerald-300 font-medium hover:underline transition-colors"
+            className="text-[#A4F002] hover:underline font-semibold transition-colors"
           >
             Today
           </button>

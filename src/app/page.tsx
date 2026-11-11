@@ -6,18 +6,18 @@ function JobsSkeleton() {
   return (
     <div className="space-y-8 animate-pulse">
       {/* Top Filter & Inbox Header Bar Skeleton */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 rounded-2xl bg-neutral-900/40 border border-neutral-800/80">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 rounded-2xl bg-[#00332e]/50 border border-[#00574f]/50">
         <div className="lg:w-1/4 space-y-3">
-          <div className="h-5 w-24 bg-neutral-800 rounded-full" />
-          <div className="h-8 w-44 bg-neutral-800 rounded-lg" />
-          <div className="h-16 w-full bg-neutral-900 rounded-xl" />
+          <div className="h-5 w-24 bg-[#004d45] rounded-full" />
+          <div className="h-8 w-44 bg-[#004d45] rounded-lg" />
+          <div className="h-16 w-full bg-[#002824] rounded-xl" />
         </div>
         <div className="flex-1 flex justify-center">
-          <div className="h-64 w-full max-w-[320px] bg-neutral-800/60 rounded-2xl" />
+          <div className="h-64 w-full max-w-[320px] bg-[#004d45]/70 rounded-2xl" />
         </div>
         <div className="lg:w-1/4 flex flex-col lg:items-end gap-3">
-          <div className="h-8 w-28 bg-neutral-900 rounded-full border border-neutral-800" />
-          <div className="h-5 w-44 bg-neutral-900 rounded" />
+          <div className="h-8 w-28 bg-[#002824] rounded-full border border-[#00574f]" />
+          <div className="h-5 w-44 bg-[#002824] rounded" />
         </div>
       </div>
 
@@ -26,19 +26,19 @@ function JobsSkeleton() {
         {[...Array(6)].map((_, i) => (
           <div
             key={i}
-            className="flex flex-col justify-between rounded-xl border border-neutral-800/80 bg-neutral-900/40 p-5 space-y-4"
+            className="flex flex-col justify-between rounded-xl border border-[#00574f]/50 bg-[#00332e]/40 p-5 space-y-4"
           >
             <div className="space-y-3">
-              <div className="h-3.5 w-24 bg-neutral-800 rounded" />
-              <div className="h-5 w-3/4 bg-neutral-800 rounded" />
+              <div className="h-3.5 w-24 bg-[#004d45] rounded" />
+              <div className="h-5 w-3/4 bg-[#004d45] rounded" />
               <div className="flex gap-2 pt-1">
-                <div className="h-6 w-20 bg-neutral-800/70 rounded-md" />
-                <div className="h-6 w-24 bg-neutral-800/70 rounded-md" />
+                <div className="h-6 w-20 bg-[#004d45]/70 rounded-md" />
+                <div className="h-6 w-24 bg-[#004d45]/70 rounded-md" />
               </div>
             </div>
-            <div className="pt-4 border-t border-neutral-800/60 flex justify-between items-center">
-              <div className="h-3.5 w-28 bg-neutral-800 rounded" />
-              <div className="h-7 w-24 bg-neutral-800 rounded-lg" />
+            <div className="pt-4 border-t border-[#00574f]/40 flex justify-between items-center">
+              <div className="h-3.5 w-28 bg-[#004d45] rounded" />
+              <div className="h-7 w-24 bg-[#004d45] rounded-lg" />
             </div>
           </div>
         ))}
@@ -60,14 +60,14 @@ async function JobsContent() {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-50 flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
+    <div className="min-h-screen bg-[#00403A] text-[#A4F002] flex flex-col font-sans selection:bg-[#A4F002]/30 selection:text-[#A4F002]">
       {/* Navigation Header */}
-      <header className="sticky top-0 z-30 w-full border-b border-neutral-800/80 bg-neutral-950/80 backdrop-blur-md">
+      <header className="sticky top-0 z-30 w-full border-b border-[#00574f]/70 bg-[#00403A]/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-neutral-950 shadow-lg shadow-emerald-500/20">
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#A4F002] text-[#00403A] shadow-lg shadow-[#A4F002]/20">
               <svg
-                className="w-5 h-5 text-neutral-950"
+                className="w-5 h-5 text-[#00403A]"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -79,15 +79,15 @@ export default function HomePage() {
               </svg>
             </div>
             <div>
-              <span className="font-extrabold text-xl tracking-tight text-white">
+              <span className="font-extrabold text-xl tracking-tight text-[#A4F002]">
                 RoleRadar
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/50 text-[11px] font-mono uppercase tracking-wider text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#002f2a] border border-[#00574f] text-[11px] font-mono uppercase tracking-wider text-[#A4F002]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#A4F002] animate-pulse" />
               <span>Live Pipeline</span>
             </span>
           </div>
@@ -102,7 +102,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full border-t border-neutral-900 py-6 text-center text-xs text-neutral-400">
+      <footer className="w-full border-t border-[#00574f]/50 py-6 text-center text-xs text-[#A4F002]/70">
         RoleRadar • Automated Career Intelligence
       </footer>
     </div>

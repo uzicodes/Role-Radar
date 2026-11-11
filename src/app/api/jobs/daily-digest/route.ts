@@ -72,12 +72,12 @@ export async function GET(request: Request) {
         const salarySafe = job.salary ? escapeHtml(job.salary) : null;
 
         return `
-          <div style="background-color: #161822; border: 1px solid #27272a; border-radius: 12px; padding: 18px; margin-bottom: 14px;">
+          <div style="background-color: #00332e; border: 1px solid #00574f; border-radius: 12px; padding: 18px; margin-bottom: 14px;">
             <div style="margin-bottom: 10px;">
               <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px;">
                 <tr>
                   <td style="text-align: left; vertical-align: middle;">
-                    <span style="font-size: 11px; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">
+                    <span style="font-size: 11px; color: #A4F002; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">
                       ${companySafe}
                     </span>
                   </td>
@@ -85,7 +85,7 @@ export async function GET(request: Request) {
                     job.matchScore
                       ? `
                   <td style="text-align: right; vertical-align: middle;">
-                    <span style="display: inline-block; background-color: rgba(16, 185, 129, 0.15); color: #34d399; padding: 2px 9px; border-radius: 9999px; font-size: 11px; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    <span style="display: inline-block; background-color: rgba(164, 240, 2, 0.15); color: #A4F002; padding: 2px 9px; border-radius: 9999px; font-size: 11px; font-weight: 700; border: 1px solid rgba(164, 240, 2, 0.3);">
                       ${job.matchScore}% Match
                     </span>
                   </td>`
@@ -94,18 +94,18 @@ export async function GET(request: Request) {
                 </tr>
               </table>
 
-              <h2 style="margin: 0 0 8px 0; font-size: 17px; font-weight: 700; color: #fafafa; line-height: 1.35;">
+              <h2 style="margin: 0 0 8px 0; font-size: 17px; font-weight: 700; color: #ffffff; line-height: 1.35;">
                 ${titleSafe}
               </h2>
 
-              <div style="font-size: 12px; color: #a1a1aa; line-height: 1.5;">
+              <div style="font-size: 12px; color: rgba(164, 240, 2, 0.75); line-height: 1.5;">
                 ${locationSafe ? `<span style="display: inline-block; margin-right: 12px;">📍 ${locationSafe}</span>` : ''}
-                ${salarySafe ? `<span style="display: inline-block; color: #34d399; font-weight: 600;">💰 ${salarySafe}</span>` : ''}
+                ${salarySafe ? `<span style="display: inline-block; color: #A4F002; font-weight: 600;">💰 ${salarySafe}</span>` : ''}
               </div>
             </div>
 
             <div style="padding-top: 6px;">
-              <a href="${job.link}" target="_blank" style="display: inline-block; background-color: #10b981; color: #090a0f; padding: 8px 16px; border-radius: 7px; text-decoration: none; font-weight: 700; font-size: 12px;">
+              <a href="${job.link}" target="_blank" style="display: inline-block; background-color: #A4F002; color: #00403A; padding: 8px 16px; border-radius: 7px; text-decoration: none; font-weight: 700; font-size: 12px;">
                 View &amp; Apply &rarr;
               </a>
             </div>
@@ -122,22 +122,22 @@ export async function GET(request: Request) {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>RoleRadar Daily Digest</title>
         </head>
-        <body style="margin: 0; padding: 0; background-color: #090a0f; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ededed;">
+        <body style="margin: 0; padding: 0; background-color: #00403A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #A4F002;">
           <div style="max-width: 620px; margin: 0 auto; padding: 28px 16px;">
-            <div style="background-color: #0f1117; border: 1px solid #27272a; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
+            <div style="background-color: #00302b; border: 1px solid #00574f; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
               
               <!-- Header Banner -->
-              <div style="padding: 24px 28px; background: linear-gradient(135deg, #131722 0%, #0d1117 100%); border-bottom: 1px solid #27272a;">
+              <div style="padding: 24px 28px; background: linear-gradient(135deg, #003a34 0%, #002824 100%); border-bottom: 1px solid #00574f;">
                 <div style="margin-bottom: 8px;">
-                  <span style="display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #10b981;">
+                  <span style="display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #A4F002;">
                     Daily Intelligence Digest
                   </span>
                 </div>
-                <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #A4F002; letter-spacing: -0.5px;">
                   RoleRadar
                 </h1>
-                <p style="margin: 6px 0 0 0; font-size: 14px; color: #a1a1aa;">
-                  ${todayDhakaDate} &bull; <strong style="color: #10b981;">${jobs.length}</strong> ${jobs.length === 1 ? 'role' : 'roles'} captured today
+                <p style="margin: 6px 0 0 0; font-size: 14px; color: rgba(164, 240, 2, 0.75);">
+                  ${todayDhakaDate} &bull; <strong style="color: #A4F002;">${jobs.length}</strong> ${jobs.length === 1 ? 'role' : 'roles'} captured today
                 </p>
               </div>
 
@@ -147,9 +147,9 @@ export async function GET(request: Request) {
               </div>
 
               <!-- Footer -->
-              <div style="padding: 18px 24px; background-color: #0b0c10; border-top: 1px solid #1f2028; text-align: center; color: #71717a; font-size: 11px; line-height: 1.6;">
-                <p style="margin: 0 0 4px 0; font-weight: 600; color: #a1a1aa;">RoleRadar &bull; Autonomous Career Crawler</p>
-                <p style="margin: 0; color: #52525b;">Dispatched automatically once daily at 9:00 PM BST</p>
+              <div style="padding: 18px 24px; background-color: #002420; border-top: 1px solid #00574f; text-align: center; color: rgba(164, 240, 2, 0.6); font-size: 11px; line-height: 1.6;">
+                <p style="margin: 0 0 4px 0; font-weight: 600; color: #A4F002;">RoleRadar &bull; Autonomous Career Crawler</p>
+                <p style="margin: 0; color: rgba(164, 240, 2, 0.5);">Dispatched automatically once daily at 9:00 PM BST</p>
               </div>
 
             </div>

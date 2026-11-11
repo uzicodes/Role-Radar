@@ -55,29 +55,22 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
   const isToday = selectedDate === getTodayYMD();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-[#A4F002]">
       {/* Top Filter & Inbox Header Bar with Always-Open Inline Calendar in the Middle */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 rounded-2xl bg-neutral-900/60 border border-neutral-800/90 shadow-xl backdrop-blur-md">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 rounded-2xl bg-[#00332e]/70 border border-[#00574f]/80 shadow-2xl backdrop-blur-md">
         {/* Left Section: Context & Active Date Overview */}
         <div className="lg:w-1/4 flex-shrink-0 space-y-3">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-800/50 text-[10px] font-mono uppercase tracking-wider text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#002824] border border-[#00574f] text-[10px] font-mono uppercase tracking-wider text-[#A4F002]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#A4F002] animate-pulse" />
               <span>Daily Inbox</span>
             </span>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mt-1.5">
-              RoleRadar
-            </h1>
           </div>
-          <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed">
-            Select any day on the calendar to explore tech roles captured on that specific date.
-          </p>
-
-          <div className="p-3.5 rounded-xl bg-neutral-900/90 border border-neutral-800/80 shadow-inner">
-            <div className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500">
+          <div className="p-3.5 rounded-xl bg-[#002824]/90 border border-[#00574f]/80 shadow-inner">
+            <div className="text-[11px] uppercase tracking-wider font-semibold text-[#A4F002]/60">
               Viewing Date
             </div>
-            <div className="text-sm font-bold text-emerald-400 mt-0.5">
+            <div className="text-sm font-bold text-[#A4F002] mt-0.5">
               {formattedSelectedDate || selectedDate}
             </div>
           </div>
@@ -95,8 +88,8 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
         {/* Right Section: Stats, Legend & Actions */}
         <div className="lg:w-1/4 flex-shrink-0 flex flex-col lg:items-end justify-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#002824] border border-[#00574f] text-xs font-mono text-[#A4F002] shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-[#A4F002] animate-pulse" />
               <span>
                 {filteredJobs.length} {filteredJobs.length === 1 ? "role" : "roles"} found
               </span>
@@ -106,15 +99,15 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
           {!isToday && (
             <button
               onClick={() => setSelectedDate(getTodayYMD())}
-              className="px-3.5 py-1.5 rounded-xl bg-neutral-800/90 hover:bg-neutral-700 text-xs font-medium text-emerald-400 border border-neutral-700/80 transition-colors shadow-sm"
+              className="px-3.5 py-1.5 rounded-xl bg-[#002824] hover:bg-[#004d45] text-xs font-semibold text-[#A4F002] border border-[#00574f] transition-colors shadow-sm"
               title="Reset to today's date"
             >
               Reset to Today
             </button>
           )}
 
-          <div className="text-[11px] text-neutral-400 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <div className="text-[11px] text-[#A4F002]/70 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#A4F002]" />
             <span>Green dots show dates with synced jobs</span>
           </div>
         </div>
@@ -123,8 +116,8 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
       {/* Filtered Jobs Grid or Fallback Message */}
       {filteredJobs.length === 0 ? (
         /* Empty State for Selected Date */
-        <div className="my-12 flex flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-800 bg-neutral-900/30 p-12 text-center backdrop-blur-sm">
-          <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-neutral-900 border border-neutral-800 mb-4 shadow-inner text-neutral-500">
+        <div className="my-12 flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#00574f]/70 bg-[#00332e]/40 p-12 text-center backdrop-blur-sm">
+          <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[#002824] border border-[#00574f] mb-4 shadow-inner text-[#A4F002]/70">
             <svg
               className="w-8 h-8"
               fill="none"
@@ -139,16 +132,16 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-neutral-200">
+          <h3 className="text-lg font-bold text-[#A4F002]">
             No jobs synced on this date.
           </h3>
-          <p className="mt-2 max-w-md text-sm text-neutral-400">
+          <p className="mt-2 max-w-md text-sm text-[#A4F002]/70">
             No opportunities were recorded for{" "}
-            <span className="text-neutral-300 font-medium">{formattedSelectedDate || selectedDate}</span>. Select a
+            <span className="text-[#A4F002] font-semibold">{formattedSelectedDate || selectedDate}</span>. Select a
             different date from the calendar or run the scraper.
           </p>
           <div className="mt-6 flex items-center gap-3">
-            <code className="px-3.5 py-1.5 rounded-lg bg-black/80 border border-neutral-800 font-mono text-xs text-emerald-400">
+            <code className="px-3.5 py-1.5 rounded-lg bg-[#002420] border border-[#00574f] font-mono text-xs text-[#A4F002]">
               npm run scrape
             </code>
           </div>
@@ -159,15 +152,15 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
           {filteredJobs.map((job) => (
             <div
               key={job.id}
-              className="group flex flex-col justify-between rounded-xl border border-neutral-800 bg-neutral-900/60 p-5 shadow-lg shadow-black/40 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-700 hover:bg-neutral-900"
+              className="group flex flex-col justify-between rounded-xl border border-[#00574f]/80 bg-[#00332e]/70 p-5 shadow-lg shadow-black/30 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#A4F002]/70 hover:bg-[#003833]"
             >
               {/* Card Header & Content */}
               <div>
                 {/* Top row: Location */}
                 <div className="flex items-center justify-between gap-3 mb-2.5">
-                  <span className="inline-flex items-center gap-1 text-[11px] font-medium tracking-wide text-emerald-400/90 truncate">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium tracking-wide text-[#A4F002]/90 truncate">
                     <svg
-                      className="w-3 h-3 text-emerald-400/80 shrink-0"
+                      className="w-3 h-3 text-[#A4F002] shrink-0"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -189,16 +182,16 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                 </div>
 
                 {/* Job Title */}
-                <h3 className="text-lg font-bold text-neutral-100 group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
+                <h3 className="text-lg font-bold text-white group-hover:text-[#A4F002] transition-colors line-clamp-2 leading-snug">
                   {job.title}
                 </h3>
 
                 {/* Company & Salary Badges */}
                 <div className="mt-3 flex flex-wrap gap-2">
                   {job.company && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-neutral-800 text-neutral-300 border border-neutral-700/60">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-[#002622] text-[#A4F002] border border-[#00574f]">
                       <svg
-                        className="w-3.5 h-3.5 text-neutral-400 shrink-0"
+                        className="w-3.5 h-3.5 text-[#A4F002]/80 shrink-0"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -210,14 +203,14 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                           d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                         />
                       </svg>
-                      <span className="truncate max-w-[170px] font-semibold text-neutral-200">{job.company}</span>
+                      <span className="truncate max-w-[170px]">{job.company}</span>
                     </span>
                   )}
 
                   {job.salary && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-950/40 text-emerald-300 border border-emerald-800/40">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-[#002622] text-[#A4F002] border border-[#00574f]">
                       <svg
-                        className="w-3.5 h-3.5 text-emerald-400 shrink-0"
+                        className="w-3.5 h-3.5 text-[#A4F002]/80 shrink-0"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -236,9 +229,9 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
               </div>
 
               {/* Card Footer: Timestamp & Action Button */}
-              <div className="mt-5 pt-4 border-t border-neutral-800/80 flex items-center justify-between gap-3">
+              <div className="mt-5 pt-4 border-t border-[#00574f]/60 flex items-center justify-between gap-3">
                 <span
-                  className="text-xs text-neutral-400 font-mono truncate"
+                  className="text-xs text-[#A4F002]/60 font-mono truncate"
                   suppressHydrationWarning
                   title={new Date(job.createdAt).toISOString()}
                 >
@@ -249,7 +242,7 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                   href={job.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-neutral-950 transition-colors shadow-sm shrink-0"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-extrabold bg-[#A4F002] hover:bg-[#b7ff1f] text-[#00403A] transition-all shadow-md shrink-0 active:scale-95"
                 >
                   <span>View Role</span>
                   <svg
@@ -257,7 +250,7 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                   >
                     <path
                       strokeLinecap="round"
