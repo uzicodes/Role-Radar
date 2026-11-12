@@ -36,4 +36,5 @@ export const TARGET_URLS: string[] = [
   "https://jatri.co/career#job-opening",
   "https://konasl.com/careers#openings",
   "https://indetechs.com/career?department=1#career-open-roles",
+  "https://www.quantigo.ai/careers",
 ];

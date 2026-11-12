@@ -21,11 +21,8 @@ interface JobsInboxProps {
   jobs: JobItem[];
 }
 
-function formatDate(date: Date | string): string {
+function formatTime(date: Date | string): string {
   return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(date));
@@ -190,7 +187,7 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                     suppressHydrationWarning
                     title={new Date(job.createdAt).toISOString()}
                   >
-                    {formatDate(job.createdAt)}
+                    {formatTime(job.createdAt)}
                   </span>
                 </div>
 
@@ -202,9 +199,9 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
 
               {/* Bottom Row: Company & Salary (Left) & View Role Button (Right) */}
               <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-[#00574f]/50">
-                <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
                   {job.company && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-[#002622] text-[#A4F002] border border-[#00574f] truncate max-w-[150px]">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-[#002622] text-[#A4F002] border border-[#00574f] min-w-0 max-w-full">
                       <svg
                         className="w-3 h-3 text-[#A4F002]/80 shrink-0"
                         fill="none"
@@ -223,7 +220,7 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                   )}
 
                   {job.salary && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-[#002622] text-[#A4F002] border border-[#00574f] truncate max-w-[120px]">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-[#002622] text-[#A4F002] border border-[#00574f] shrink-0">
                       <svg
                         className="w-3 h-3 text-[#A4F002]/80 shrink-0"
                         fill="none"
@@ -237,7 +234,7 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                           d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      <span className="truncate">{job.salary}</span>
+                      <span className="truncate max-w-[100px]">{job.salary}</span>
                     </span>
                   )}
                 </div>
@@ -246,7 +243,7 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                   href={job.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-lg text-xs font-extrabold bg-[#A4F002] hover:bg-[#b7ff1f] text-[#00403A] transition-all shadow-md shrink-0 active:scale-95"
+                  className="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-lg text-xs font-extrabold bg-[#A4F002] hover:bg-[#b7ff1f] text-[#00403A] transition-all shadow-md shrink-0 active:scale-95 ml-auto"
                 >
                   <span>View Role</span>
                   <svg
