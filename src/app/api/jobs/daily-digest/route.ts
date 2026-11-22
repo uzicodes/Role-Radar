@@ -1,46 +1,55 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { Resend } from 'resend';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { Resend } from "resend";
 
 function escapeHtml(str: string): string {
   return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 export async function GET(request: Request) {
   try {
     // 1. Authentication Check: Validate Bearer CRON_SECRET
-    const authHeader = request.headers.get('authorization');
+    const authHeader = request.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
 
     if (!cronSecret) {
-      console.error('[Daily Digest] Server error: CRON_SECRET is not configured in environment variables.');
-      return NextResponse.json({ error: 'Unauthorized: CRON_SECRET not configured' }, { status: 401 });
+      console.error(
+        "[Daily Digest] Server error: CRON_SECRET is not configured in environment variables.",
+      );
+      return NextResponse.json(
+        { error: "Unauthorized: CRON_SECRET not configured" },
+        { status: 401 },
+      );
     }
 
     if (authHeader !== `Bearer ${cronSecret}`) {
-      console.warn(`[Daily Digest] Unauthorized access attempt with invalid or missing token.`);
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.warn(
+        `[Daily Digest] Unauthorized access attempt with invalid or missing token.`,
+      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // 2. Date String Formatting: Format today's date in 'Asia/Dhaka' timezone as "MMM D YYYY" (e.g., "Nov 12 2026")
-    const dhakaParts = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Dhaka',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+    const dhakaParts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Dhaka",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     }).formatToParts(new Date());
 
-    const month = dhakaParts.find((p) => p.type === 'month')?.value || '';
-    const day = dhakaParts.find((p) => p.type === 'day')?.value || '';
-    const year = dhakaParts.find((p) => p.type === 'year')?.value || '';
+    const month = dhakaParts.find((p) => p.type === "month")?.value || "";
+    const day = dhakaParts.find((p) => p.type === "day")?.value || "";
+    const year = dhakaParts.find((p) => p.type === "year")?.value || "";
     const todayString = `${month} ${day} ${year}`.trim();
 
-    console.log(`[Daily Digest] Running daily digest for date: "${todayString}"`);
+    console.log(
+      `[Daily Digest] Running daily digest for date: "${todayString}"`,
+    );
 
     // 3. Database Query: Fetch all jobs synced today, newest first
     const jobs = await prisma.job.findMany({
@@ -48,50 +57,47 @@ export async function GET(request: Request) {
         scrapedDate: todayString,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
-    console.log(`[Daily Digest] Queried database for scrapedDate="${todayString}". Found ${jobs.length} job(s).`);
+    console.log(
+      `[Daily Digest] Queried database for scrapedDate="${todayString}". Found ${jobs.length} job(s).`,
+    );
 
-    // 4. No Jobs Fallback: Skip sending email if database has 0 jobs for today
-    if (jobs.length === 0) {
-      console.log(`[Daily Digest] No jobs found for today (${todayString}). Skipping email.`);
-      return NextResponse.json({
-        success: true,
-        message: 'No jobs synced today. Skipping email.',
-        count: 0,
-      });
-    }
-
-    // 5. Verify Resend environment variables
+    // 4. Verify Resend environment variables
     const resendApiKey = process.env.RESEND_API_KEY;
     const alertEmail = process.env.ALERT_EMAIL;
 
     if (!resendApiKey || !alertEmail) {
       console.error(
-        `[Daily Digest] Configuration missing: RESEND_API_KEY present: ${Boolean(resendApiKey)}, ALERT_EMAIL present: ${Boolean(alertEmail)}`
+        `[Daily Digest] Configuration missing: RESEND_API_KEY present: ${Boolean(resendApiKey)}, ALERT_EMAIL present: ${Boolean(alertEmail)}`,
       );
       return NextResponse.json(
         {
           success: false,
-          error: 'Email service not configured (missing RESEND_API_KEY or ALERT_EMAIL)',
+          error:
+            "Email service not configured (missing RESEND_API_KEY or ALERT_EMAIL)",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     const resend = new Resend(resendApiKey);
 
-    // 6. Construct sleek, dark-themed HTML email template
-    const jobsListHtml = jobs
-      .map((job) => {
-        const titleSafe = escapeHtml(job.title);
-        const companySafe = escapeHtml(job.company);
-        const locationSafe = job.location ? escapeHtml(job.location) : null;
-        const salarySafe = job.salary ? escapeHtml(job.salary) : null;
+    // 5. Construct sleek, dark-themed HTML email template
+    const jobsListHtml =
+      jobs.length > 0
+        ? jobs
+            .map((job) => {
+              const titleSafe = escapeHtml(job.title);
+              const companySafe = escapeHtml(job.company);
+              const locationSafe = job.location
+                ? escapeHtml(job.location)
+                : null;
+              const salarySafe = job.salary ? escapeHtml(job.salary) : null;
 
-        return `
+              return `
           <div style="background-color: #00332e; border: 1px solid #00574f; border-radius: 12px; padding: 18px; margin-bottom: 14px;">
             <div style="margin-bottom: 10px;">
               <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px;">
@@ -109,7 +115,7 @@ export async function GET(request: Request) {
                       ${job.matchScore}% Match
                     </span>
                   </td>`
-                      : ''
+                      : ""
                   }
                 </tr>
               </table>
@@ -119,8 +125,8 @@ export async function GET(request: Request) {
               </h2>
 
               <div style="font-size: 12px; color: rgba(164, 240, 2, 0.75); line-height: 1.5;">
-                ${locationSafe ? `<span style="display: inline-block; margin-right: 12px;">📍 ${locationSafe}</span>` : ''}
-                ${salarySafe ? `<span style="display: inline-block; color: #A4F002; font-weight: 600;">💰 ${salarySafe}</span>` : ''}
+                ${locationSafe ? `<span style="display: inline-block; margin-right: 12px;">📍 ${locationSafe}</span>` : ""}
+                ${salarySafe ? `<span style="display: inline-block; color: #A4F002; font-weight: 600;">💰 ${salarySafe}</span>` : ""}
               </div>
             </div>
 
@@ -131,8 +137,18 @@ export async function GET(request: Request) {
             </div>
           </div>
         `;
-      })
-      .join('');
+            })
+            .join("")
+        : `
+          <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; margin-bottom: 14px; text-align: center;">
+            <h2 style="margin: 0 0 10px 0; font-size: 20px; font-weight: 700; color: #ffffff; line-height: 1.35;">
+              No new jobs found today
+            </h2>
+            <p style="margin: 0; font-size: 14px; color: #cbd5e1; line-height: 1.6;">
+              All career boards were scanned successfully, and no new matching listings were posted for ${todayString}.
+            </p>
+          </div>
+        `;
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -142,9 +158,9 @@ export async function GET(request: Request) {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>RoleRadar Daily Digest</title>
         </head>
-        <body style="margin: 0; padding: 0; background-color: #00403A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #A4F002;">
+        <body style="margin: 0; padding: 0; background-color: ${jobs.length > 0 ? "#00403A" : "#0f172a"}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #A4F002;">
           <div style="max-width: 620px; margin: 0 auto; padding: 28px 16px;">
-            <div style="background-color: #00302b; border: 1px solid #00574f; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
+            <div style="background-color: ${jobs.length > 0 ? "#00302b" : "#1e293b"}; border: 1px solid ${jobs.length > 0 ? "#00574f" : "#334155"}; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
               
               <!-- Header Banner -->
               <div style="padding: 24px 28px; background: linear-gradient(135deg, #003a34 0%, #002824 100%); border-bottom: 1px solid #00574f;">
@@ -157,11 +173,11 @@ export async function GET(request: Request) {
                   RoleRadar
                 </h1>
                 <p style="margin: 6px 0 0 0; font-size: 14px; color: rgba(164, 240, 2, 0.75);">
-                  ${todayString} &bull; <strong style="color: #A4F002;">${jobs.length}</strong> ${jobs.length === 1 ? 'role' : 'roles'} captured today
+                  ${todayString} &bull; <strong style="color: #A4F002;">${jobs.length}</strong> ${jobs.length === 1 ? "role" : "roles"} captured today
                 </p>
               </div>
 
-              <!-- Job Postings List -->
+              <!-- Digest Status -->
               <div style="padding: 22px 24px 10px 24px;">
                 ${jobsListHtml}
               </div>
@@ -178,45 +194,58 @@ export async function GET(request: Request) {
       </html>
     `;
 
-    // 7. Email Execution & Error Handling with Diagnostic Logging
-    const subject = `RoleRadar Daily Digest - ${todayString} (${jobs.length} Roles Found)`;
-    console.log(`[Daily Digest] Sending digest email to "${alertEmail}" with subject: "${subject}"...`);
+    // 6. Email Execution & Error Handling with Diagnostic Logging
+    const subject =
+      jobs.length > 0
+        ? `RoleRadar Daily Digest - ${todayString} (${jobs.length} New Roles)`
+        : `RoleRadar Daily Digest - ${todayString} (0 New Roles Today)`;
+    console.log(
+      `[Daily Digest] Sending digest email to "${alertEmail}" with subject: "${subject}"...`,
+    );
 
     const { data, error: resendError } = await resend.emails.send({
-      from: 'RoleRadar <onboarding@resend.dev>',
+      from: "RoleRadar <onboarding@resend.dev>",
       to: alertEmail,
       subject,
       html: emailHtml,
     });
 
     if (resendError) {
-      console.error('[Daily Digest] Resend API Error returned:', resendError);
+      console.error("[Daily Digest] Resend API Error returned:", resendError);
       return NextResponse.json(
         {
           success: false,
           error: resendError.message,
           name: resendError.name,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-    console.log(`[Daily Digest] Digest email sent successfully. Resend ID: ${data?.id}`);
+    console.log(
+      `[Daily Digest] ${jobs.length > 0 ? "Digest" : "No-new-jobs status"} email sent successfully. Resend ID: ${data?.id}`,
+    );
 
     return NextResponse.json({
       success: true,
-      message: 'Digest email sent successfully',
+      message:
+        jobs.length > 0
+          ? "Digest email sent successfully"
+          : "No new jobs found today; status email sent",
       count: jobs.length,
       emailId: data?.id,
     });
   } catch (error) {
-    console.error('[Daily Digest] Internal Server Error:', error);
+    console.error("[Daily Digest] Internal Server Error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Internal server error while compiling daily digest',
+        error:
+          error instanceof Error
+            ? error.message
+            : "Internal server error while compiling daily digest",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
