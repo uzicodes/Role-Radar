@@ -33,6 +33,11 @@ jobs:
       - name: Install Patchright Chromium browser and system dependencies
         run: npx patchright install --with-deps chromium
 
+      - name: Wake Up Neon Database & Vercel
+        run: |
+          curl -s -o /dev/null --retry 3 --retry-delay 3 https://roleradar-dev.vercel.app/api/jobs/daily-digest || true
+          sleep 3
+
       - name: Run Extraction Engine
         run: npm start
         continue-on-error: true
@@ -43,6 +48,7 @@ jobs:
 
       - name: Trigger Daily Email Digest
         if: always() && (github.event.schedule == '0 15 * * *' || github.event_name == 'workflow_dispatch')
+        continue-on-error: true
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |

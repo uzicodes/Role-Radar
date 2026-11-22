@@ -213,14 +213,46 @@ Expected Format:
           console.log('-------------------\n');
 
           console.log(`📤 Sending ${jobs.length} job(s) to ${normalizedSyncUrl}...`);
-          const syncResponse = await fetch(normalizedSyncUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${CONFIG.apiSecretKey}`,
-            },
-            body: JSON.stringify({ jobs }),
-          });
+          const maxSyncAttempts = 3;
+          let syncResponse: Response | undefined;
+
+          for (let attempt = 1; attempt <= maxSyncAttempts; attempt++) {
+            try {
+              syncResponse = await fetch(normalizedSyncUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${CONFIG.apiSecretKey}`,
+                },
+                body: JSON.stringify({ jobs }),
+              });
+            } catch (fetchError) {
+              if (attempt === maxSyncAttempts) {
+                throw fetchError;
+              }
+
+              console.warn(
+                `⚠️ Sync connection failed (attempt ${attempt}/${maxSyncAttempts}); retrying in 3 seconds...`
+              );
+              await new Promise((resolve) => setTimeout(resolve, 3000));
+              continue;
+            }
+
+            const retryableStatus = [500, 502, 504].includes(syncResponse.status);
+            if (!syncResponse.ok && retryableStatus && attempt < maxSyncAttempts) {
+              console.warn(
+                `⚠️ Sync API returned ${syncResponse.status} (attempt ${attempt}/${maxSyncAttempts}); retrying in 3 seconds...`
+              );
+              await new Promise((resolve) => setTimeout(resolve, 3000));
+              continue;
+            }
+
+            break;
+          }
+
+          if (!syncResponse) {
+            throw new Error('Sync request did not produce a response.');
+          }
 
           const syncStatus = syncResponse.status;
           const responseText = await syncResponse.text();

@@ -37,5 +37,13 @@ export const TARGET_URLS: string[] = [
   "https://konasl.com/careers#openings",
   "https://indetechs.com/career?department=1#career-open-roles",
   "https://www.quantigo.ai/careers",
-  "https://careers.brac.net/user/jobs"
+  "https://careers.brac.net/user/jobs",
+  "https://skfbd.com/career",
+  "https://career.renata-ltd.com",
+  "https://www.cobaitbangladesh.com/careers/",
+  "https://bssoln.com/careers/",
+  "https://career.sscl.tech/jobs",
+  "https://career.sscl.tech/jobs",
+
+
 ];
