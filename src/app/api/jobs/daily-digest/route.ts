@@ -91,82 +91,78 @@ export async function GET(request: Request) {
     const resend = new Resend(resendApiKey);
 
     // 5. Construct sleek, dark-themed HTML email template
-    const groupedJobs = new Map<Exclude<RoleCategory, "All">, typeof jobs>();
-    for (const category of ROLE_CATEGORIES) {
-      if (category !== "All") groupedJobs.set(category, []);
-    }
+    type Job = (typeof jobs)[number];
+    const groupedJobs: Record<RoleCategory, Job[]> = {
+      All: [],
+      "Full-Stack": [],
+      Frontend: [],
+      Backend: [],
+      "AI / ML & Data": [],
+      "DevOps & Cloud": [],
+      "QA & Testing": [],
+      "Other Roles": [],
+    };
+
     for (const job of jobs) {
-      const category = categorizeJobRole(job.title);
-      groupedJobs.get(category)?.push(job);
+      groupedJobs[categorizeJobRole(job.title)].push(job);
     }
+
+    const nonEmptyCategories = ROLE_CATEGORIES.filter(
+      (category): category is Exclude<RoleCategory, "All"> =>
+        category !== "All" && groupedJobs[category].length > 0,
+    );
+    const categorySummary = nonEmptyCategories
+      .map((category) => `${category}: ${groupedJobs[category].length}`)
+      .join(" &bull; ");
 
     const jobsListHtml =
       jobs.length > 0
-        ? ROLE_CATEGORIES.filter(
-            (category): category is Exclude<RoleCategory, "All"> =>
-              category !== "All" &&
-              (groupedJobs.get(category)?.length ?? 0) > 0,
-          )
+        ? nonEmptyCategories
             .map((category) => {
-              const categoryJobs = groupedJobs.get(category) ?? [];
-              const categoryHtml = categoryJobs
+              const categoryJobs = groupedJobs[category];
+              const categoryJobsHtml = categoryJobs
                 .map((job) => {
-              const titleSafe = escapeHtml(job.title);
-              const companySafe = escapeHtml(job.company);
-              const locationSafe = job.location
-                ? escapeHtml(job.location)
-                : null;
-              const salarySafe = job.salary ? escapeHtml(job.salary) : null;
+                  const titleSafe = escapeHtml(job.title);
+                  const companySafe = escapeHtml(job.company);
+                  const locationSafe = job.location
+                    ? escapeHtml(job.location)
+                    : null;
+                  const linkSafe = escapeHtml(job.link);
 
-              return `
-          <div style="background-color: #00332e; border: 1px solid #00574f; border-radius: 12px; padding: 18px; margin-bottom: 14px;">
-            <div style="margin-bottom: 10px;">
-              <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px;">
-                <tr>
-                  <td style="text-align: left; vertical-align: middle;">
-                    <span style="font-size: 11px; color: #A4F002; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">
-                      ${companySafe}
-                    </span>
-                  </td>
-                  ${
-                    job.matchScore
-                      ? `
-                  <td style="text-align: right; vertical-align: middle;">
-                    <span style="display: inline-block; background-color: rgba(164, 240, 2, 0.15); color: #A4F002; padding: 2px 9px; border-radius: 9999px; font-size: 11px; font-weight: 700; border: 1px solid rgba(164, 240, 2, 0.3);">
-                      ${job.matchScore}% Match
-                    </span>
-                  </td>`
-                      : ""
-                  }
-                </tr>
-              </table>
-
-              <h2 style="margin: 0 0 8px 0; font-size: 17px; font-weight: 700; color: #ffffff; line-height: 1.35;">
-                ${titleSafe}
-              </h2>
-
-              <div style="font-size: 12px; color: rgba(164, 240, 2, 0.75); line-height: 1.5;">
-                ${locationSafe ? `<span style="display: inline-block; margin-right: 12px;">📍 ${locationSafe}</span>` : ""}
-                ${salarySafe ? `<span style="display: inline-block; color: #A4F002; font-weight: 600;">💰 ${salarySafe}</span>` : ""}
-              </div>
-            </div>
-
-            <div style="padding-top: 6px;">
-              <a href="${job.link}" target="_blank" style="display: inline-block; background-color: #A4F002; color: #00403A; padding: 8px 16px; border-radius: 7px; text-decoration: none; font-weight: 700; font-size: 12px;">
-                View &amp; Apply &rarr;
-              </a>
-            </div>
-          </div>
-        `;
+                  return `
+                    <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 18px; margin-bottom: 12px;">
+                      <div style="margin-bottom: 12px;">
+                        <div style="font-size: 11px; color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px;">
+                          ${companySafe}
+                        </div>
+                        <h3 style="margin: 0 0 8px 0; font-size: 17px; line-height: 1.35;">
+                          <a href="${linkSafe}" target="_blank" rel="noopener noreferrer" style="color: #ffffff; font-weight: 700; text-decoration: none;">
+                            ${titleSafe}
+                          </a>
+                        </h3>
+                        ${locationSafe ? `<div style="font-size: 12px; color: #cbd5e1;">${locationSafe}</div>` : ""}
+                      </div>
+                      <a href="${linkSafe}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #38bdf8; color: #0f172a; padding: 8px 16px; border-radius: 7px; text-decoration: none; font-weight: 700; font-size: 12px;">
+                        View Role &rarr;
+                      </a>
+                    </div>
+                  `;
                 })
                 .join("");
 
               return `
                 <div style="margin: 18px 0 8px 0;">
-                  <h2 style="margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid rgba(164,240,2,0.25); color: #A4F002; font-size: 16px; letter-spacing: 0.2px;">
-                    ${category}
-                  </h2>
-                  ${categoryHtml}
+                  <div style="display: table; width: 100%; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 12px;">
+                    <span style="display: table-cell; color: #38bdf8; font-size: 16px; font-weight: 800;">
+                      ${category}
+                    </span>
+                    <span style="display: table-cell; width: 1%; text-align: right;">
+                      <span style="display: inline-block; background-color: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.35); border-radius: 9999px; padding: 3px 9px; font-size: 11px; font-weight: 800;">
+                        ${categoryJobs.length}
+                      </span>
+                    </span>
+                  </div>
+                  ${categoryJobsHtml}
                 </div>
               `;
             })
@@ -190,23 +186,24 @@ export async function GET(request: Request) {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>RoleRadar Daily Digest</title>
         </head>
-        <body style="margin: 0; padding: 0; background-color: ${jobs.length > 0 ? "#00403A" : "#0f172a"}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #A4F002;">
+        <body style="margin: 0; padding: 0; background-color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #38bdf8;">
           <div style="max-width: 620px; margin: 0 auto; padding: 28px 16px;">
-            <div style="background-color: ${jobs.length > 0 ? "#00302b" : "#1e293b"}; border: 1px solid ${jobs.length > 0 ? "#00574f" : "#334155"}; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
+            <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
               
               <!-- Header Banner -->
-              <div style="padding: 24px 28px; background: linear-gradient(135deg, #003a34 0%, #002824 100%); border-bottom: 1px solid #00574f;">
+              <div style="padding: 24px 28px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 1px solid #334155;">
                 <div style="margin-bottom: 8px;">
-                  <span style="display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #A4F002;">
+                  <span style="display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #38bdf8;">
                     Daily Intelligence Digest
                   </span>
                 </div>
-                <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #A4F002; letter-spacing: -0.5px;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #38bdf8; letter-spacing: -0.5px;">
                   RoleRadar
                 </h1>
-                <p style="margin: 6px 0 0 0; font-size: 14px; color: rgba(164, 240, 2, 0.75);">
-                  ${todayString} &bull; <strong style="color: #A4F002;">${jobs.length}</strong> ${jobs.length === 1 ? "role" : "roles"} captured today
+                <p style="margin: 6px 0 0 0; font-size: 14px; color: #cbd5e1;">
+                  ${todayString} &bull; <strong style="color: #38bdf8;">${jobs.length}</strong> ${jobs.length === 1 ? "role" : "roles"} captured today
                 </p>
+                ${jobs.length > 0 ? `<p style="margin: 8px 0 0 0; font-size: 12px; color: #94a3b8; line-height: 1.6;">${categorySummary}</p>` : ""}
               </div>
 
               <!-- Digest Status -->
@@ -215,9 +212,9 @@ export async function GET(request: Request) {
               </div>
 
               <!-- Footer -->
-              <div style="padding: 18px 24px; background-color: #002420; border-top: 1px solid #00574f; text-align: center; color: rgba(164, 240, 2, 0.6); font-size: 11px; line-height: 1.6;">
-                <p style="margin: 0 0 4px 0; font-weight: 600; color: #A4F002;">RoleRadar &bull; Autonomous Career Crawler</p>
-                <p style="margin: 0; color: rgba(164, 240, 2, 0.5);">Dispatched automatically once daily at 9:00 PM BST</p>
+              <div style="padding: 18px 24px; background-color: #0f172a; border-top: 1px solid #334155; text-align: center; color: #94a3b8; font-size: 11px; line-height: 1.6;">
+                <p style="margin: 0 0 4px 0; font-weight: 600; color: #38bdf8;">RoleRadar &bull; Autonomous Career Crawler</p>
+                <p style="margin: 0; color: #94a3b8;">Dispatched automatically once daily at 9:00 PM BST</p>
               </div>
 
             </div>
