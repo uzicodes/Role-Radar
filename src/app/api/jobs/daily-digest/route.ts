@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
+import {
+  categorizeJobRole,
+  ROLE_CATEGORIES,
+  type RoleCategory,
+} from "@/lib/categorizeRole";
 
 function escapeHtml(str: string): string {
   return str
@@ -86,10 +91,26 @@ export async function GET(request: Request) {
     const resend = new Resend(resendApiKey);
 
     // 5. Construct sleek, dark-themed HTML email template
+    const groupedJobs = new Map<Exclude<RoleCategory, "All">, typeof jobs>();
+    for (const category of ROLE_CATEGORIES) {
+      if (category !== "All") groupedJobs.set(category, []);
+    }
+    for (const job of jobs) {
+      const category = categorizeJobRole(job.title);
+      groupedJobs.get(category)?.push(job);
+    }
+
     const jobsListHtml =
       jobs.length > 0
-        ? jobs
-            .map((job) => {
+        ? ROLE_CATEGORIES.filter(
+            (category): category is Exclude<RoleCategory, "All"> =>
+              category !== "All" &&
+              (groupedJobs.get(category)?.length ?? 0) > 0,
+          )
+            .map((category) => {
+              const categoryJobs = groupedJobs.get(category) ?? [];
+              const categoryHtml = categoryJobs
+                .map((job) => {
               const titleSafe = escapeHtml(job.title);
               const companySafe = escapeHtml(job.company);
               const locationSafe = job.location
@@ -137,6 +158,17 @@ export async function GET(request: Request) {
             </div>
           </div>
         `;
+                })
+                .join("");
+
+              return `
+                <div style="margin: 18px 0 8px 0;">
+                  <h2 style="margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid rgba(164,240,2,0.25); color: #A4F002; font-size: 16px; letter-spacing: 0.2px;">
+                    ${category}
+                  </h2>
+                  ${categoryHtml}
+                </div>
+              `;
             })
             .join("")
         : `

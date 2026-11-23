@@ -2,6 +2,11 @@
 
 import { useState, useMemo } from "react";
 import CalendarPicker, { getTodayYMD, getDbDateString } from "./CalendarPicker";
+import {
+  categorizeJobRole,
+  ROLE_CATEGORIES,
+  type RoleCategory,
+} from "@/lib/categorizeRole";
 
 export interface JobItem {
   id: string;
@@ -37,6 +42,7 @@ function getCity(location: string | null): string {
 export default function JobsInbox({ jobs }: JobsInboxProps) {
   // 1. State for selected calendar date (YYYY-MM-DD format) defaulting to today
   const [selectedDate, setSelectedDate] = useState<string>(() => getTodayYMD());
+  const [activeRole, setActiveRole] = useState<RoleCategory>("All");
 
   // 2. Format selected date into "MMM D YYYY" (e.g. "Nov 8 2026") using pure string manipulation
   const formattedSelectedDate = getDbDateString(selectedDate);
@@ -53,7 +59,41 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
   }, [jobs]);
 
   // 4. Filter jobs: only render jobs where job.scrapedDate exactly matches formattedSelectedDate
-  const filteredJobs = jobs.filter((job) => job.scrapedDate === formattedSelectedDate);
+  const dateJobs = useMemo(
+    () => jobs.filter((job) => job.scrapedDate === formattedSelectedDate),
+    [jobs, formattedSelectedDate],
+  );
+
+  const roleCounts = useMemo(() => {
+    const counts = new Map<RoleCategory, number>();
+    counts.set("All", dateJobs.length);
+
+    for (const category of ROLE_CATEGORIES) {
+      if (category !== "All") counts.set(category, 0);
+    }
+
+    for (const job of dateJobs) {
+      const category = categorizeJobRole(job.title);
+      counts.set(category, (counts.get(category) ?? 0) + 1);
+    }
+
+    return counts;
+  }, [dateJobs]);
+
+  const visibleJobs = useMemo(
+    () =>
+      activeRole === "All"
+        ? dateJobs
+        : dateJobs.filter(
+            (job) => categorizeJobRole(job.title) === activeRole,
+          ),
+    [dateJobs, activeRole],
+  );
+
+  const selectDate = (date: string) => {
+    setSelectedDate(date);
+    setActiveRole("All");
+  };
 
   const isToday = selectedDate === getTodayYMD();
 
@@ -83,7 +123,7 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
         <div className="flex justify-center items-center flex-1 my-2 lg:my-0">
           <CalendarPicker
             selectedDate={selectedDate}
-            onSelectDate={setSelectedDate}
+            onSelectDate={selectDate}
             datesWithJobs={datesWithJobs}
           />
         </div>
@@ -94,14 +134,14 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#002824] border border-[#00574f] text-xs font-mono text-[#A4F002] shadow-sm">
               <span className="w-2 h-2 rounded-full bg-[#A4F002] animate-pulse" />
               <span>
-                {filteredJobs.length} {filteredJobs.length === 1 ? "role" : "roles"} found
+                {dateJobs.length} {dateJobs.length === 1 ? "role" : "roles"} found
               </span>
             </span>
           </div>
 
           {!isToday && (
             <button
-              onClick={() => setSelectedDate(getTodayYMD())}
+              onClick={() => selectDate(getTodayYMD())}
               className="px-3.5 py-1.5 rounded-xl bg-[#002824] hover:bg-[#004d45] text-xs font-semibold text-[#A4F002] border border-[#00574f] transition-colors shadow-sm"
               title="Reset to today's date"
             >
@@ -116,8 +156,43 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
         </div>
       </div>
 
+      {/* Role Category Filter */}
+      <div className="overflow-x-auto pb-1">
+        <div className="flex flex-wrap gap-2 min-w-max">
+          {ROLE_CATEGORIES.map((category) => {
+            const count = roleCounts.get(category) ?? 0;
+            if (category !== "All" && count === 0) return null;
+
+            const isActive = activeRole === category;
+            return (
+              <button
+                key={category}
+                type="button"
+                onClick={() => setActiveRole(category)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors whitespace-nowrap ${
+                  isActive
+                    ? "bg-[#A4F002] text-[#00403A] border-[#A4F002] shadow-md shadow-[#A4F002]/20"
+                    : "bg-[#002824] text-[#A4F002]/80 border-[#00574f] hover:border-[#A4F002]/70 hover:text-[#A4F002]"
+                }`}
+              >
+                <span>{category}</span>
+                <span
+                  className={
+                    isActive
+                      ? "text-[#00403A]/70"
+                      : "text-[#A4F002]/50"
+                  }
+                >
+                  ({count})
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Filtered Jobs Grid or Fallback Message */}
-      {filteredJobs.length === 0 ? (
+      {visibleJobs.length === 0 ? (
         /* Empty State for Selected Date */
         <div className="my-12 flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#00574f]/70 bg-[#00332e]/40 p-12 text-center backdrop-blur-sm">
           <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[#002824] border border-[#00574f] mb-4 shadow-inner text-[#A4F002]/70">
@@ -152,7 +227,9 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
       ) : (
         /* Responsive CSS Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredJobs.map((job) => (
+          {visibleJobs.map((job) => {
+            const roleCategory = categorizeJobRole(job.title);
+            return (
             <div
               key={job.id}
               className="group flex flex-col justify-between rounded-xl border border-[#00574f]/80 bg-[#00332e]/70 p-4 shadow-lg shadow-black/30 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#A4F002]/70 hover:bg-[#003833]"
@@ -195,6 +272,9 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                 <h3 className="text-base font-bold text-white group-hover:text-[#A4F002] transition-colors line-clamp-2 leading-snug mb-3">
                   {job.title}
                 </h3>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#002824] border border-[#00574f] text-[10px] font-bold text-[#A4F002]/90">
+                  {roleCategory}
+                </span>
               </div>
 
               {/* Bottom Row: Company & Salary (Left) & View Role Button (Right) */}
@@ -262,7 +342,8 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                 </a>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
