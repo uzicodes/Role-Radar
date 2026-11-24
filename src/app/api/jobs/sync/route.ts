@@ -1,6 +1,36 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+type IncomingJob = Record<string, unknown> & {
+  experienceRequired?: string | null;
+};
+
+function isIncomingJob(job: unknown): job is IncomingJob {
+  if (typeof job !== 'object' || job === null || Array.isArray(job)) {
+    return false;
+  }
+
+  const experienceRequired = (job as Record<string, unknown>).experienceRequired;
+  return (
+    experienceRequired === undefined ||
+    experienceRequired === null ||
+    typeof experienceRequired === 'string'
+  );
+}
+
+function normalizeExperienceRequired(value: string | null | undefined): string | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const normalized = value.trim();
+  if (['', 'n/a', 'not mentioned', 'none'].includes(normalized.toLowerCase())) {
+    return null;
+  }
+
+  return normalized;
+}
+
 export async function POST(req: Request) {
   try {
     // 1. Authenticate the incoming request from your scraper / GitHub Action
@@ -14,6 +44,13 @@ export async function POST(req: Request) {
 
     if (!Array.isArray(jobs) || jobs.length === 0) {
       return NextResponse.json({ message: 'No jobs found in payload' }, { status: 400 });
+    }
+
+    if (!jobs.every(isIncomingJob)) {
+      return NextResponse.json(
+        { error: 'Invalid experienceRequired value in job payload' },
+        { status: 400 },
+      );
     }
 
     // 3. Format and bulk insert to Neon PostgreSQL, ignoring duplicate URLs
@@ -30,11 +67,12 @@ export async function POST(req: Request) {
     const year = dhakaParts.find((p) => p.type === 'year')?.value || '';
     const currentDhakaDate = `${month} ${day} ${year}`.trim();
 
-    const newJobs = jobs.map((job: Record<string, unknown>) => ({
+    const newJobs = jobs.map((job: IncomingJob) => ({
       title: String(job.title),
       company: String(job.company),
       location: job.location ? String(job.location) : null,
       salary: job.salary ? String(job.salary) : null,
+      experienceRequired: normalizeExperienceRequired(job.experienceRequired),
       link: String(job.link),
       matchScore:
         job.matchScore !== null && job.matchScore !== undefined
