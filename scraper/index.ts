@@ -9,6 +9,7 @@ interface ScrapedJob {
   company: string;
   location?: string | null;
   salary?: string | null;
+  experienceRequired: string | null;
   link: string;
   matchScore?: number | null;
 }
@@ -142,6 +143,7 @@ Each job object in the array must strictly match this schema:
 - "company": (string) Hiring company name (infer from context or domain)
 - "location": (string or null) Job location (e.g. "Remote", "Dhaka, Bangladesh"), or null if not found
 - "salary": (string or null) Salary or compensation range if mentioned, otherwise null
+- "experienceRequired": (string or null) Extract a concise normalized requirement only when years of experience are explicitly stated in the job listing or snippet (e.g. "2+ yrs", "1-3 yrs", "3 yrs", "0-1 yrs"). Return null if no experience is required (e.g. "No experience required", "Freshers welcome") or if years are not mentioned. Never guess or infer from seniority titles alone.
 - "link": (string) Direct job application or detail link. Use the link provided in "[LINK: ...]" next to the job title or button. If not found, use the target page URL.
 - "matchScore": (number between 1 and 100 or null) Estimated relevance score based on tech/software engineering roles (e.g. 85 for software/dev roles, lower or null if general).
 
@@ -156,6 +158,7 @@ Expected Format:
       "company": "Brain Station 23",
       "location": "Dhaka, Bangladesh",
       "salary": "BDT 120,000 - 150,000",
+      "experienceRequired": "2+ yrs",
       "link": "https://brainstation-23.com/career/job-123",
       "matchScore": 90
     }
@@ -224,7 +227,12 @@ Expected Format:
                   'Content-Type': 'application/json',
                   Authorization: `Bearer ${CONFIG.apiSecretKey}`,
                 },
-                body: JSON.stringify({ jobs }),
+                body: JSON.stringify({
+                  jobs: jobs.map((job) => ({
+                    ...job,
+                    experienceRequired: job.experienceRequired ?? null,
+                  })),
+                }),
               });
             } catch (fetchError) {
               if (attempt === maxSyncAttempts) {

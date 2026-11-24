@@ -14,6 +14,7 @@ export interface JobItem {
   company: string;
   location: string | null;
   salary: string | null;
+  experienceRequired: string | null;
   link: string;
   matchScore: number | null;
   isRead: boolean;
@@ -315,6 +316,12 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
                         />
                       </svg>
                       <span className="truncate max-w-[100px]">{job.salary}</span>
+                    </span>
+                  )}
+
+                  {job.experienceRequired?.trim() && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#002824] text-[#A4F002]/80 border border-[#00574f] shrink-0">
+                      {job.experienceRequired.trim()}
                     </span>
                   )}
                 </div>

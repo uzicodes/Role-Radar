@@ -127,7 +127,14 @@ export async function GET(request: Request) {
                   const locationSafe = job.location
                     ? escapeHtml(job.location)
                     : null;
+                  const experienceRequiredSafe = job.experienceRequired?.trim()
+                    ? escapeHtml(job.experienceRequired.trim())
+                    : null;
                   const linkSafe = escapeHtml(job.link);
+                  const detailsHtml =
+                    locationSafe || experienceRequiredSafe
+                      ? `<div style="font-size: 12px; color: #cbd5e1;">${locationSafe ?? ""}${locationSafe && experienceRequiredSafe ? " &bull; " : ""}${experienceRequiredSafe ? `<span style="display: inline-block; background-color: rgba(56,189,248,0.12); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.3); border-radius: 9999px; padding: 2px 7px; font-size: 11px;">${experienceRequiredSafe}</span>` : ""}</div>`
+                      : "";
 
                   return `
                     <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 18px; margin-bottom: 12px;">
@@ -140,7 +147,7 @@ export async function GET(request: Request) {
                             ${titleSafe}
                           </a>
                         </h3>
-                        ${locationSafe ? `<div style="font-size: 12px; color: #cbd5e1;">${locationSafe}</div>` : ""}
+                        ${detailsHtml}
                       </div>
                       <a href="${linkSafe}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #38bdf8; color: #0f172a; padding: 8px 16px; border-radius: 7px; text-decoration: none; font-weight: 700; font-size: 12px;">
                         View Role &rarr;
