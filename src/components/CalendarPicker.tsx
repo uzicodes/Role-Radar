@@ -176,14 +176,8 @@ export default function CalendarPicker({
         })}
       </div>
 
-      {/* Footer / Legend */}
-      <div className="mt-2.5 pt-2 border-t border-[#00574f]/80 flex items-center justify-between text-[11px] text-[#A4F002]/70">
-        <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#A4F002]" />
-          <span>Synced roles</span>
-        </div>
-
-        {selectedDate !== todayYMD && (
+      {selectedDate !== todayYMD && (
+        <div className="mt-2.5 pt-2 border-t border-[#00574f]/80 flex justify-end text-[11px] text-[#A4F002]/70">
           <button
             type="button"
             onClick={() => {
@@ -194,8 +188,8 @@ export default function CalendarPicker({
           >
             Today
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

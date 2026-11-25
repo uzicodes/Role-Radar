@@ -61,8 +61,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#00403A] text-[#A4F002] flex flex-col font-sans selection:bg-[#A4F002]/30 selection:text-[#A4F002]">
       {/* Navigation Header */}
-      <header className="sticky top-0 z-30 w-full border-b border-[#00574f]/70 bg-[#00403A]/90 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="sticky top-4 z-30 w-full px-4">
+        <div className="max-w-5xl mx-auto h-16 px-5 sm:px-7 flex items-center justify-between rounded-full border border-[#00574f]/70 bg-[#00332e]/90 shadow-lg shadow-black/10 backdrop-blur-md">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#A4F002] text-[#00403A] shadow-lg shadow-[#A4F002]/20">
               <svg
