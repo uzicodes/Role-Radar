@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import JobsInbox, { JobItem } from "@/components/JobsInbox";
 
@@ -64,19 +65,13 @@ export default function HomePage() {
       <header className="sticky top-4 z-30 w-full px-4">
         <div className="max-w-5xl mx-auto h-16 px-5 sm:px-7 flex items-center justify-between rounded-full border border-[#00574f]/70 bg-[#00332e]/90 shadow-lg shadow-black/10 backdrop-blur-md">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#A4F002] text-[#00403A] shadow-lg shadow-[#A4F002]/20">
-              <svg
-                className="w-5 h-5 text-[#00403A]"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.5}
-              >
-                <circle cx="12" cy="12" r="9" className="opacity-40" />
-                <path d="M12 3a9 9 0 0 1 9 9" strokeLinecap="round" />
-                <circle cx="12" cy="12" r="3" fill="currentColor" />
-              </svg>
-            </div>
+            <Image
+              src="/logo.webp"
+              alt="RoleRadar logo"
+              width={40}
+              height={40}
+              className="h-10 w-10 object-contain"
+            />
             <div>
               <span className="font-extrabold text-xl tracking-tight text-[#A4F002]">
                 RoleRadar
@@ -101,8 +96,16 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full border-t border-[#00574f]/50 py-6 text-center text-xs text-[#A4F002]/70">
-        RoleRadar • Automated Career Intelligence
+      <footer className="flex items-center justify-center gap-2 w-full border-t border-[#00574f]/50 py-6 text-center text-xs text-[#A4F002]/70">
+        <Image
+          src="/logo.webp"
+          alt=""
+          aria-hidden="true"
+          width={20}
+          height={20}
+          className="h-5 w-5 object-contain"
+        />
+        <span>RoleRadar • Automated Career Intelligence</span>
       </footer>
     </div>
   );

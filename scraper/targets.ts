@@ -44,6 +44,7 @@ export const TARGET_URLS: string[] = [
   "https://bssoln.com/careers/",
   "https://career.sscl.tech/jobs",
   "https://career.sscl.tech/jobs",
+  "https://www.raktch.com/careers/#open-positions",
 
 
 ];
