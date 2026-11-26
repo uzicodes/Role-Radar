@@ -3,6 +3,8 @@
 # dependencies
 node_modules/
 /node_modules
+.pw-browsers/
+scraper/.pw-browsers/
 /.pnp
 .pnp.*
 .yarn/*

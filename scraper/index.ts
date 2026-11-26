@@ -1,7 +1,15 @@
 import 'dotenv/config';
-import { chromium } from 'patchright';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import Groq from 'groq-sdk';
 import { TARGET_URLS } from './targets';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+if (!process.env.PLAYWRIGHT_BROWSERS_PATH && process.platform === 'win32') {
+  process.env.PLAYWRIGHT_BROWSERS_PATH = path.join(__dirname, '.pw-browsers');
+}
+
+const { chromium } = await import('patchright');
 
 // Interface matching the Prisma schema and Next.js /api/jobs/sync endpoint
 interface ScrapedJob {
