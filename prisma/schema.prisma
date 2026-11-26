@@ -25,3 +25,14 @@ model Job {
   // The new composite index for the dashboard
   @@index([scrapedDate, createdAt])
 }
+
+model ScrapeRun {
+  id              String   @id @default(cuid())
+  totalBoards     Int
+  succeededBoards Int
+  failedBoards    Int
+  newJobsFound    Int
+  durationMs      Int?
+  boardResults    Json
+  createdAt       DateTime @default(now())
+}

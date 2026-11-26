@@ -7,6 +7,7 @@ import {
   ROLE_CATEGORIES,
   type RoleCategory,
 } from "@/lib/categorizeRole";
+import ScrapeHealth from "./ScrapeHealth";
 
 export interface JobItem {
   id: string;
@@ -131,6 +132,8 @@ export default function JobsInbox({ jobs }: JobsInboxProps) {
 
         {/* Right Section: Stats, Legend & Actions */}
         <div className="lg:w-1/4 flex-shrink-0 flex flex-col lg:items-end justify-center gap-3">
+          <ScrapeHealth />
+
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#002824] border border-[#00574f] text-xs font-mono text-[#A4F002] shadow-sm">
               <span className="w-2 h-2 rounded-full bg-[#A4F002] animate-pulse" />

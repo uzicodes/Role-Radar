@@ -57,6 +57,24 @@ interface ScrapedJob {
   matchScore?: number | null;
 }
 
+type BoardScrapeResult = {
+  name: string;
+  url: string;
+  status: 'ok' | 'error';
+  method: 'ats-json' | 'browser';
+  jobsFound: number;
+  error?: string;
+};
+
+interface ScrapeStats {
+  totalBoards: number;
+  succeededBoards: number;
+  failedBoards: number;
+  newJobsFound: number;
+  durationMs: number;
+  boardResults: BoardScrapeResult[];
+}
+
 // Configuration from environment variables with sensible defaults
 const CONFIG = {
   // Next.js API sync endpoint
@@ -69,7 +87,55 @@ const CONFIG = {
   groqModel: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
 };
 
+async function reportScrapeStats(
+  syncUrl: string,
+  apiSecretKey: string,
+  scrapeStats: ScrapeStats,
+): Promise<void> {
+  const maxAttempts = 3;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    let response: Response;
+    try {
+      response = await fetch(syncUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiSecretKey}`,
+        },
+        body: JSON.stringify({ jobs: [], scrapeStats }),
+      });
+    } catch (error) {
+      if (attempt === maxAttempts) throw error;
+      console.warn(
+        `⚠️ Scrape health report connection failed (attempt ${attempt}/${maxAttempts}); retrying in 3 seconds...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      continue;
+    }
+
+    if (response.ok) {
+      console.log('📈 Scrape health report saved.');
+      return;
+    }
+
+    const responseText = await response.text();
+    const retryableStatus = [500, 502, 504].includes(response.status);
+    if (!retryableStatus || attempt === maxAttempts) {
+      throw new Error(
+        `Failed to report scrape health. API responded with status ${response.status}: ${responseText}`,
+      );
+    }
+
+    console.warn(
+      `⚠️ Scrape health API returned ${response.status} (attempt ${attempt}/${maxAttempts}); retrying in 3 seconds...`,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+  }
+}
+
 async function runScraper(): Promise<void> {
+  const runStartedAt = Date.now();
   console.log('='.repeat(60));
   console.log('🚀 RoleRadar Job Scraper starting up...');
   console.log(`📋 Total Job Boards Queued: ${TARGET_URLS.length}`);
@@ -106,23 +172,34 @@ async function runScraper(): Promise<void> {
     // 3. Process each job board URL sequentially
     let completedCount = 0;
     let failedCount = 0;
+    const boardResults: BoardScrapeResult[] = [];
 
     for (const url of TARGET_URLS) {
       console.log('\n' + '-'.repeat(60));
       console.log(`🎯 Processing Job Board [${completedCount + failedCount + 1}/${TARGET_URLS.length}]: ${url}`);
       console.log('-'.repeat(60));
 
+      const board = { name: getBoardName(url), url };
+      let method: BoardScrapeResult['method'] = 'browser';
+      let jobsFound = 0;
       let page: Page | undefined;
 
       try {
-        const board = { name: getBoardName(url), url };
         const atsResult = await tryFetchAtsJobs(board);
         let extractedContent: string;
 
         if (atsResult.handled) {
+          method = 'ats-json';
           console.log(`⚡ [ATS JSON] ${board.name}: fetched ${atsResult.jobs.length} postings`);
           if (atsResult.jobs.length === 0) {
             console.log(`ℹ️  No job postings found on ${url}. Skipping Groq extraction.`);
+            boardResults.push({
+              name: board.name,
+              url,
+              status: 'ok',
+              method,
+              jobsFound: 0,
+            });
             completedCount++;
             continue;
           }
@@ -261,6 +338,7 @@ Expected Format:
         }
 
         console.log(`✅ Extracted ${jobs.length} job(s) from ${url}.`);
+        jobsFound = jobs.length;
 
         // If jobs were found, POST to Next.js sync endpoint
         if (jobs.length > 0) {
@@ -352,10 +430,26 @@ Expected Format:
           await page.close();
           page = undefined;
         }
+        boardResults.push({
+          name: board.name,
+          url,
+          status: 'ok',
+          method,
+          jobsFound,
+        });
         completedCount++;
       } catch (urlError) {
         failedCount++;
-        console.error(`❌ Error scraping ${url}:`, (urlError as Error).message || urlError);
+        const message = urlError instanceof Error ? urlError.message : String(urlError);
+        console.error(`❌ Error scraping ${url}:`, message);
+        boardResults.push({
+          name: board.name,
+          url,
+          status: 'error',
+          method,
+          jobsFound,
+          error: message,
+        });
         continue;
       } finally {
         // Ensure page is cleaned up even if error occurred before page.close()
@@ -368,6 +462,15 @@ Expected Format:
         }
       }
     }
+
+    await reportScrapeStats(normalizedSyncUrl, CONFIG.apiSecretKey, {
+      totalBoards: TARGET_URLS.length,
+      succeededBoards: completedCount,
+      failedBoards: failedCount,
+      newJobsFound: boardResults.reduce((total, result) => total + result.jobsFound, 0),
+      durationMs: Date.now() - runStartedAt,
+      boardResults,
+    });
 
     console.log('\n' + '='.repeat(60));
     console.log('✨ Scraper run summary:');
