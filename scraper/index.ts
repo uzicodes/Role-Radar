@@ -2,7 +2,9 @@ import 'dotenv/config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Groq from 'groq-sdk';
+import { tryFetchAtsJobs, type RawScrapedJob } from './atsAdapter';
 import { TARGET_URLS } from './targets';
+import type { Browser, BrowserContext, Page } from 'patchright';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 if (!process.env.PLAYWRIGHT_BROWSERS_PATH && process.platform === 'win32') {
@@ -10,6 +12,39 @@ if (!process.env.PLAYWRIGHT_BROWSERS_PATH && process.platform === 'win32') {
 }
 
 const { chromium } = await import('patchright');
+
+const ATS_HOSTS = new Set([
+  'boards.greenhouse.io',
+  'job-boards.greenhouse.io',
+  'jobs.lever.co',
+  'jobs.ashbyhq.com',
+  'apply.workable.com',
+]);
+
+function getBoardName(url: string): string {
+  const parsedUrl = new URL(url);
+  if (ATS_HOSTS.has(parsedUrl.hostname.toLowerCase())) {
+    const slug = parsedUrl.pathname.split('/').filter(Boolean)[0];
+    if (slug) return decodeURIComponent(slug);
+  }
+  return parsedUrl.hostname.replace(/^www\./i, '');
+}
+
+function formatAtsJobs(jobs: RawScrapedJob[]): string {
+  return jobs
+    .map((job, index) => {
+      const lines = [
+        `Job ${index + 1}: ${job.title} [LINK: ${job.link}]`,
+        `Company: ${job.company}`,
+        job.location ? `Location: ${job.location}` : null,
+        job.department ? `Department: ${job.department}` : null,
+        job.workType ? `Work type: ${job.workType}` : null,
+        job.description ? `Description:\n${job.description}` : null,
+      ];
+      return lines.filter((line): line is string => line !== null).join('\n');
+    })
+    .join('\n\n');
+}
 
 // Interface matching the Prisma schema and Next.js /api/jobs/sync endpoint
 interface ScrapedJob {
@@ -62,22 +97,10 @@ async function runScraper(): Promise<void> {
   console.log(`📡 Sync Endpoint:   ${normalizedSyncUrl}`);
   console.log(`🤖 AI Engine:       Groq (${CONFIG.groqModel})\n`);
 
-  let browser;
+  let browser: Browser | undefined;
+  let context: BrowserContext | undefined;
 
   try {
-    // 2. Launch stealth browser and context ONCE at the beginning
-    console.log('🌐 Launching headless Chromium browser via Patchright...');
-    browser = await chromium.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-
-    const context = await browser.newContext({
-      viewport: { width: 1280, height: 800 },
-      userAgent:
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-    });
-
     const groq = new Groq({ apiKey: CONFIG.groqApiKey });
 
     // 3. Process each job board URL sequentially
@@ -89,47 +112,76 @@ async function runScraper(): Promise<void> {
       console.log(`🎯 Processing Job Board [${completedCount + failedCount + 1}/${TARGET_URLS.length}]: ${url}`);
       console.log('-'.repeat(60));
 
-      let page;
+      let page: Page | undefined;
 
       try {
-        // Create new page for this URL
-        page = await context.newPage();
+        const board = { name: getBoardName(url), url };
+        const atsResult = await tryFetchAtsJobs(board);
+        let extractedContent: string;
 
-        // Navigate to target URL and wait for DOM content to load
-        console.log(`⏳ Navigating to ${url}...`);
-        const response = await page.goto(url, {
-          waitUntil: 'domcontentloaded',
-          timeout: 60000,
-        });
+        if (atsResult.handled) {
+          console.log(`⚡ [ATS JSON] ${board.name}: fetched ${atsResult.jobs.length} postings`);
+          if (atsResult.jobs.length === 0) {
+            console.log(`ℹ️  No job postings found on ${url}. Skipping Groq extraction.`);
+            completedCount++;
+            continue;
+          }
+          extractedContent = formatAtsJobs(atsResult.jobs);
+        } else {
+          // Launch Chromium only when a board requires browser scraping.
+          if (!browser) {
+            console.log('🌐 Launching headless Chromium browser via Patchright...');
+            browser = await chromium.launch({
+              headless: true,
+              args: ['--no-sandbox', '--disable-setuid-sandbox'],
+            });
 
-        console.log(`📄 Response status: ${response?.status() ?? 'N/A'}`);
+            context = await browser.newContext({
+              viewport: { width: 1280, height: 800 },
+              userAgent:
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+            });
+          }
 
-        // Allow dynamic rendering for React/SPA sites (e.g. Pathao)
-        await page.waitForTimeout(3000);
+          if (!context) throw new Error('Patchright browser context was not initialized.');
+          page = await context.newPage();
 
-        // Wait for body to be available and visible
-        await page.waitForSelector('body', { timeout: 15000 });
-
-        // Extract visible body text and annotate links with their URLs (stripping boilerplate)
-        console.log('🔍 Stripping boilerplate elements and extracting page content...');
-        const extractedContent = await page.evaluate(() => {
-          // Remove boilerplate elements from the DOM (retaining nav and aside)
-          document
-            .querySelectorAll('header, footer, script, style, noscript, iframe')
-            .forEach((el) => el.remove());
-
-          // Annotate remaining anchor tags with their resolved URLs
-          const anchors = document.querySelectorAll('a');
-          anchors.forEach((a) => {
-            const href = a.href;
-            const text = a.textContent?.trim() || '';
-            if (href && text) {
-              a.textContent = `${text} [LINK: ${href}]`;
-            }
+          // Navigate to target URL and wait for DOM content to load
+          console.log(`⏳ Navigating to ${url}...`);
+          const response = await page.goto(url, {
+            waitUntil: 'domcontentloaded',
+            timeout: 60000,
           });
 
-          return document.body?.innerText || '';
-        });
+          console.log(`📄 Response status: ${response?.status() ?? 'N/A'}`);
+
+          // Allow dynamic rendering for React/SPA sites (e.g. Pathao)
+          await page.waitForTimeout(3000);
+
+          // Wait for body to be available and visible
+          await page.waitForSelector('body', { timeout: 15000 });
+
+          // Extract visible body text and annotate links with their URLs (stripping boilerplate)
+          console.log('🔍 Stripping boilerplate elements and extracting page content...');
+          extractedContent = await page.evaluate(() => {
+            // Remove boilerplate elements from the DOM (retaining nav and aside)
+            document
+              .querySelectorAll('header, footer, script, style, noscript, iframe')
+              .forEach((el) => el.remove());
+
+            // Annotate remaining anchor tags with their resolved URLs
+            const anchors = document.querySelectorAll('a');
+            anchors.forEach((a) => {
+              const href = a.href;
+              const text = a.textContent?.trim() || '';
+              if (href && text) {
+                a.textContent = `${text} [LINK: ${href}]`;
+              }
+            });
+
+            return document.body?.innerText || '';
+          });
+        }
 
         console.log(`📊 Extracted ~${extractedContent.length} characters of text from page.`);
 
@@ -296,8 +348,10 @@ Expected Format:
         }
 
         // Close page to free memory
-        await page.close();
-        page = undefined;
+        if (page) {
+          await page.close();
+          page = undefined;
+        }
         completedCount++;
       } catch (urlError) {
         failedCount++;
