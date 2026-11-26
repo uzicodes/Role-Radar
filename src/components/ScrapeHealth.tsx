@@ -154,9 +154,9 @@ export default function ScrapeHealth() {
 
   const healthy = run !== null && run.failedBoards === 0;
   const pillColor = healthy
-    ? "border-emerald-500/40 bg-emerald-950/60 text-emerald-200 hover:bg-emerald-900/70"
-    : "border-amber-500/40 bg-amber-950/50 text-amber-200 hover:bg-amber-900/60";
-  const dotColor = healthy ? "bg-emerald-400" : "bg-amber-400";
+    ? "border-[#00574f] bg-[#002824] text-[#A4F002] hover:bg-[#004d45]"
+    : "border-amber-500/50 bg-amber-950/40 text-amber-200 hover:bg-amber-900/60";
+  const dotColor = healthy ? "bg-[#A4F002]" : "bg-amber-400";
   const statusText = loading
     ? "Loading scrape health"
     : loadError
@@ -204,148 +204,148 @@ export default function ScrapeHealth() {
               aria-labelledby="scrape-health-title"
               aria-hidden={!isOpen}
               inert={!isOpen}
-              className={`absolute inset-y-0 right-0 flex w-full max-w-xl flex-col border-l border-slate-700 bg-[#0f172a] text-slate-100 shadow-2xl transition-transform duration-300 ${
+              className={`absolute inset-y-0 right-0 flex w-full max-w-xl flex-col rounded-l-2xl border-l border-[#00574f] bg-[#00403A] text-[#A4F002] shadow-2xl transition-transform duration-300 ${
                 isOpen ? "translate-x-0" : "translate-x-full"
               }`}
             >
-          <div className="flex items-start justify-between gap-4 border-b border-slate-700 bg-[#1e293b] px-5 py-5 sm:px-7">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">
-                Scraper diagnostics
-              </p>
-              <h2 id="scrape-health-title" className="mt-1 text-xl font-bold">
-                Latest board health
-              </h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
-            >
-              Close
-            </button>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
-            {loading ? (
-              <p className="rounded-xl border border-slate-700 bg-[#1e293b] p-4 text-sm text-slate-300">
-                Loading the latest scrape run…
-              </p>
-            ) : loadError ? (
-              <p
-                role="alert"
-                className="rounded-xl border border-rose-500/40 bg-rose-950/40 p-4 text-sm text-rose-200"
-              >
-                Could not load scrape diagnostics: {loadError}
-              </p>
-            ) : !run ? (
-              <p className="rounded-xl border border-slate-700 bg-[#1e293b] p-4 text-sm text-slate-300">
-                No scrape run has been reported yet.
-              </p>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-3">
-                  <SummaryCard label="Succeeded" value={`${run.succeededBoards}/${run.totalBoards}`} color="emerald" />
-                  <SummaryCard label="Failed" value={String(run.failedBoards)} color={run.failedBoards > 0 ? "rose" : "slate"} />
-                  <SummaryCard label="New jobs found" value={String(run.newJobsFound)} color="sky" />
-                  <SummaryCard label="Duration" value={formatDuration(run.durationMs)} color="slate" />
+              <div className="flex items-start justify-between gap-4 rounded-tl-2xl border-b border-[#00574f] bg-[#00332e]/95 px-5 py-5 backdrop-blur-md sm:px-7">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#A4F002]/70">
+                    Scraper diagnostics
+                  </p>
+                  <h2 id="scrape-health-title" className="mt-1 text-xl font-bold text-[#A4F002]">
+                    Latest board health
+                  </h2>
                 </div>
-                <p className="mt-3 text-xs text-slate-400">
-                  Last synced {formatLastSynced(run.createdAt)}
-                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="rounded-lg border border-[#00574f] bg-[#002824] px-3 py-1.5 text-sm text-[#A4F002]/80 transition-colors hover:bg-[#004d45] hover:text-[#A4F002]"
+                >
+                  Close
+                </button>
+              </div>
 
-                {failedBoards.length > 0 && (
-                  <section className="mt-6">
-                    <h3 className="mb-3 text-sm font-semibold text-rose-200">
-                      Failed boards ({failedBoards.length})
-                    </h3>
-                    <div className="space-y-3">
-                      {failedBoards.map((board, index) => (
-                        <article
-                          key={`${board.url}-${board.name}-${index}`}
-                          className="rounded-xl border border-rose-500/40 bg-rose-950/30 p-4"
-                        >
-                          <a
-                            href={board.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="break-all text-sm font-semibold text-rose-100 underline decoration-rose-400/50 underline-offset-2 hover:text-white"
-                          >
-                            {board.name}
-                          </a>
-                          <p className="mt-2 break-words text-sm text-rose-200">
-                            {board.error || "No error reason was reported."}
-                          </p>
-                          <div className="mt-3">
-                            <MethodBadge method={board.method} />
-                          </div>
-                        </article>
-                      ))}
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
+                {loading ? (
+                  <p className="rounded-xl border border-[#00574f] bg-[#00332e]/70 p-4 text-sm text-[#A4F002]/70">
+                    Loading the latest scrape run…
+                  </p>
+                ) : loadError ? (
+                  <p
+                    role="alert"
+                    className="rounded-xl border border-rose-500/40 bg-rose-950/30 p-4 text-sm text-rose-200"
+                  >
+                    Could not load scrape diagnostics: {loadError}
+                  </p>
+                ) : !run ? (
+                  <p className="rounded-xl border border-[#00574f] bg-[#00332e]/70 p-4 text-sm text-[#A4F002]/70">
+                    No scrape run has been reported yet.
+                  </p>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <SummaryCard label="Succeeded" value={`${run.succeededBoards}/${run.totalBoards}`} color="emerald" />
+                      <SummaryCard label="Failed" value={String(run.failedBoards)} color={run.failedBoards > 0 ? "rose" : "slate"} />
+                      <SummaryCard label="New jobs found" value={String(run.newJobsFound)} color="sky" />
+                      <SummaryCard label="Duration" value={formatDuration(run.durationMs)} color="slate" />
                     </div>
-                  </section>
-                )}
+                    <p className="mt-3 text-xs text-[#A4F002]/60">
+                      Last synced {formatLastSynced(run.createdAt)}
+                    </p>
 
-                <section className="mt-7">
-                  <div className="sticky top-0 z-10 -mx-5 border-y border-slate-700 bg-[#0f172a]/95 px-5 py-3 backdrop-blur sm:-mx-7 sm:px-7">
-                    <label
-                      htmlFor="scrape-board-search"
-                      className="mb-2 block text-sm font-semibold text-slate-200"
-                    >
-                      All scanned boards ({filteredBoards.length}/{run.totalBoards})
-                    </label>
-                    <input
-                      id="scrape-board-search"
-                      type="search"
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Search board, URL, method, or error"
-                      className="w-full rounded-lg border border-slate-600 bg-[#1e293b] px-3 py-2 text-sm text-white outline-none placeholder:text-slate-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20"
-                    />
-                  </div>
-
-                  <div className="mt-3 space-y-2">
-                    {filteredBoards.map((board, index) => (
-                      <article
-                        key={`${board.url}-${board.name}-${index}`}
-                        className="flex flex-col gap-2 rounded-xl border border-slate-700 bg-[#1e293b] p-3 sm:flex-row sm:items-center sm:justify-between"
-                      >
-                        <div className="min-w-0">
-                          <a
-                            href={board.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block truncate text-sm font-medium text-slate-100 hover:text-emerald-300"
-                          >
-                            {board.name}
-                          </a>
-                          <span className="mt-1 block truncate text-xs text-slate-400">
-                            {board.url}
-                          </span>
+                    {failedBoards.length > 0 && (
+                      <section className="mt-6">
+                        <h3 className="mb-3 text-sm font-semibold text-rose-200">
+                          Failed boards ({failedBoards.length})
+                        </h3>
+                        <div className="space-y-3">
+                          {failedBoards.map((board, index) => (
+                            <article
+                              key={`${board.url}-${board.name}-${index}`}
+                              className="rounded-xl border border-rose-500/40 bg-rose-950/30 p-4"
+                            >
+                              <a
+                                href={board.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="break-all text-sm font-semibold text-rose-100 underline decoration-rose-400/50 underline-offset-2 hover:text-white"
+                              >
+                                {board.name}
+                              </a>
+                              <p className="mt-2 break-words text-sm text-rose-200">
+                                {board.error || "No error reason was reported."}
+                              </p>
+                              <div className="mt-3">
+                                <MethodBadge method={board.method} />
+                              </div>
+                            </article>
+                          ))}
                         </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          <MethodBadge method={board.method} />
-                          <span
-                            className={`rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${
-                              board.status === "ok"
-                                ? "border-emerald-500/40 bg-emerald-950/50 text-emerald-300"
-                                : "border-rose-500/40 bg-rose-950/50 text-rose-300"
-                            }`}
-                          >
-                            {board.status === "ok" ? "OK" : "Failed"}
-                          </span>
-                        </div>
-                      </article>
-                    ))}
-                    {filteredBoards.length === 0 && (
-                      <p className="rounded-xl border border-slate-700 bg-[#1e293b] p-4 text-sm text-slate-400">
-                        No boards match this search.
-                      </p>
+                      </section>
                     )}
-                  </div>
-                </section>
-              </>
-            )}
-          </div>
+
+                    <section className="mt-7">
+                      <div className="sticky top-0 z-10 -mx-5 border-y border-[#00574f] bg-[#00403A]/95 px-5 py-3 backdrop-blur sm:-mx-7 sm:px-7">
+                        <label
+                          htmlFor="scrape-board-search"
+                          className="mb-2 block text-sm font-semibold text-[#A4F002]"
+                        >
+                          All scanned boards ({filteredBoards.length}/{run.totalBoards})
+                        </label>
+                        <input
+                          id="scrape-board-search"
+                          type="search"
+                          value={search}
+                          onChange={(event) => setSearch(event.target.value)}
+                          placeholder="Search board, URL, method, or error"
+                          className="w-full rounded-lg border border-[#00574f] bg-[#002824] px-3 py-2 text-sm text-[#A4F002] outline-none placeholder:text-[#A4F002]/40 focus:border-[#A4F002]/70 focus:ring-2 focus:ring-[#A4F002]/20"
+                        />
+                      </div>
+
+                      <div className="mt-3 space-y-2">
+                        {filteredBoards.map((board, index) => (
+                          <article
+                            key={`${board.url}-${board.name}-${index}`}
+                            className="flex flex-col gap-2 rounded-xl border border-[#00574f] bg-[#00332e]/70 p-3 sm:flex-row sm:items-center sm:justify-between"
+                          >
+                            <div className="min-w-0">
+                              <a
+                                href={board.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block truncate text-sm font-medium text-[#A4F002] hover:text-white"
+                              >
+                                {board.name}
+                              </a>
+                              <span className="mt-1 block truncate text-xs text-[#A4F002]/50">
+                                {board.url}
+                              </span>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-2">
+                              <MethodBadge method={board.method} />
+                              <span
+                                className={`rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                                  board.status === "ok"
+                                    ? "border-[#00574f] bg-[#002824] text-[#A4F002]"
+                                    : "border-rose-500/40 bg-rose-950/30 text-rose-200"
+                                }`}
+                              >
+                                {board.status === "ok" ? "OK" : "Failed"}
+                              </span>
+                            </div>
+                          </article>
+                        ))}
+                        {filteredBoards.length === 0 && (
+                          <p className="rounded-xl border border-[#00574f] bg-[#00332e]/70 p-4 text-sm text-[#A4F002]/60">
+                            No boards match this search.
+                          </p>
+                        )}
+                      </div>
+                    </section>
+                  </>
+                )}
+              </div>
             </aside>
           </div>,
           portalRoot,
@@ -364,15 +364,15 @@ function SummaryCard({
   color: "emerald" | "rose" | "sky" | "slate";
 }) {
   const colorClasses = {
-    emerald: "text-emerald-300",
+    emerald: "text-[#A4F002]",
     rose: "text-rose-300",
-    sky: "text-sky-300",
-    slate: "text-slate-100",
+    sky: "text-[#A4F002]",
+    slate: "text-[#A4F002]/90",
   };
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-[#1e293b] p-3">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+    <div className="rounded-xl border border-[#00574f] bg-[#00332e]/70 p-3">
+      <p className="text-[11px] font-medium uppercase tracking-wide text-[#A4F002]/60">
         {label}
       </p>
       <p className={`mt-1 text-lg font-bold ${colorClasses[color]}`}>{value}</p>
@@ -385,8 +385,8 @@ function MethodBadge({ method }: { method: ScrapeMethod }) {
     <span
       className={`rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${
         method === "ats-json"
-          ? "border-sky-500/40 bg-sky-950/50 text-sky-300"
-          : "border-slate-500/40 bg-slate-800 text-slate-300"
+          ? "border-[#A4F002]/30 bg-[#A4F002]/10 text-[#A4F002]"
+          : "border-[#00574f] bg-[#002824] text-[#A4F002]/70"
       }`}
     >
       {method === "ats-json" ? "ATS JSON" : "Browser"}
