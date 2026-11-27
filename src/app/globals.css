@@ -195,22 +195,9 @@ body {
   animation: floo-caret-blink 1s step-end infinite;
 }
 
-.floo-crowd-fade {
-  background: linear-gradient(
-    180deg,
-    #000 0%,
-    rgba(0, 0, 0, 0.08) 28%,
-    transparent 47%,
-    rgba(0, 0, 0, 0.12) 80%,
-    #000 100%
-  );
-}
-
-.floo-crowd-parallax {
+.floo-crowd-character {
   left: 0;
   position: absolute;
-  transform: translate3d(var(--parallax-x, 0vw), 0, 0);
-  will-change: transform;
 }
 
 .floo-crowd-walker {

@@ -1,7 +1,7 @@
 "use client";
 
 import Image, { type StaticImageData } from "next/image";
-import { useEffect, useRef, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import image1 from "./assets/image-1.svg";
 import image2 from "./assets/image-2.svg";
 import image3 from "./assets/image-3.svg";
@@ -39,6 +39,7 @@ const CHARACTER_ASSETS: StaticImageData[] = [
 type CrowdCharacter = {
   direction: 1 | -1;
   duration: number;
+  depth: number;
   height: number;
   image: StaticImageData;
   index: number;
@@ -51,116 +52,52 @@ type CSSCustomProperties = CSSProperties & {
   [key: `--${string}`]: number | string;
 };
 
-const CROWD: CrowdCharacter[] = Array.from({ length: 64 }, (_, index) => {
-  const top = 31 + ((index * 29 + 11) % 55);
-  const width = Math.round(146 + (top - 31.8) * 2.62);
-  const depth = (top - 31) / (85 - 31);
+const CROWD_COUNT = 56;
 
-  return {
-    direction: index % 2 === 0 ? 1 : -1,
-    duration: 26 + ((index * 7) % 15) + depth * 7,
-    height: Math.round(width * 1.35),
-    image: CHARACTER_ASSETS[index % CHARACTER_ASSETS.length],
-    index,
-    phase: ((index * 17) % 64) / 64,
-    top,
-    width,
-  };
-});
+const CROWD: CrowdCharacter[] = Array.from(
+  { length: CROWD_COUNT },
+  (_, index) => {
+    const depthPosition = 31 + ((index * 23 + 11) % 55);
+    const depth = (depthPosition - 31) / (85 - 31);
+    const top = 58 + depth * 10;
+    const width = Math.round(146 + (depthPosition - 31.8) * 2.62);
+    const baseDuration = (26 + ((index * 7) % 15) + depth * 7) * 0.92;
+    const speedMultiplier = 1 + (index % 4) * 0.04;
+    const duration = baseDuration / speedMultiplier;
+
+    return {
+      direction: index % 2 === 0 ? 1 : -1,
+      duration,
+      depth,
+      height: Math.round(width * 1.35),
+      image: CHARACTER_ASSETS[index % CHARACTER_ASSETS.length],
+      index,
+      phase: ((index * 19 + 13) % CROWD_COUNT) / CROWD_COUNT,
+      top,
+      width,
+    };
+  },
+);
 
 export default function WalkingCrowd() {
-  const crowdRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const crowd = crowdRef.current;
-    if (!crowd) {
-      return;
-    }
-
-    const motionPreference = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    );
-    let animationFrame: number | null = null;
-    let normalizedPointerX = 0;
-    let pointerTracking = false;
-
-    const updateParallax = (event: PointerEvent) => {
-      normalizedPointerX = (event.clientX / window.innerWidth - 0.5) * 2;
-      if (animationFrame !== null) {
-        return;
-      }
-
-      animationFrame = window.requestAnimationFrame(() => {
-        animationFrame = null;
-        const characters =
-          crowd.querySelectorAll<HTMLElement>("[data-parallax-depth]");
-
-        characters.forEach((character) => {
-          const depth = Number(character.dataset.parallaxDepth ?? "0");
-          character.style.setProperty(
-            "--parallax-x",
-            `${-normalizedPointerX * depth * 3}vw`,
-          );
-        });
-      });
-    };
-
-    const syncMotionPreference = () => {
-      if (motionPreference.matches) {
-        if (pointerTracking) {
-          window.removeEventListener("pointermove", updateParallax);
-          pointerTracking = false;
-        }
-        if (animationFrame !== null) {
-          window.cancelAnimationFrame(animationFrame);
-          animationFrame = null;
-        }
-        crowd
-          .querySelectorAll<HTMLElement>("[data-parallax-depth]")
-          .forEach((character) =>
-            character.style.setProperty("--parallax-x", "0vw"),
-          );
-      } else if (!pointerTracking) {
-        window.addEventListener("pointermove", updateParallax, {
-          passive: true,
-        });
-        pointerTracking = true;
-      }
-    };
-
-    motionPreference.addEventListener("change", syncMotionPreference);
-    syncMotionPreference();
-
-    return () => {
-      motionPreference.removeEventListener("change", syncMotionPreference);
-      if (pointerTracking) {
-        window.removeEventListener("pointermove", updateParallax);
-      }
-      if (animationFrame !== null) {
-        window.cancelAnimationFrame(animationFrame);
-      }
-    };
-  }, []);
-
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 z-[3] overflow-hidden"
-      ref={crowdRef}
     >
       {CROWD.map((character) => {
-        const depth = (character.top - 31) / (85 - 31);
-        const from = character.direction === 1 ? "-6vw" : "104vw";
-        const to = character.direction === 1 ? "104vw" : "-6vw";
+        const from =
+          character.direction === 1 ? "calc(-100% - 6vw)" : "106vw";
+        const to =
+          character.direction === 1 ? "106vw" : "calc(-100% - 6vw)";
         const fromPosition = character.direction === 1 ? -6 : 104;
         const toPosition = character.direction === 1 ? 104 : -6;
         const characterStyle: CSSCustomProperties = {
-          filter: `blur(${Math.max(0.04, (78 - character.top) * 0.05)}px)`,
           height: character.height,
-          opacity: 0.48 + depth * 0.48,
+          opacity: 1,
           top: `${character.top}%`,
           width: character.width,
-          zIndex: Math.floor(character.top),
+          zIndex: Math.floor(31 + character.depth * (85 - 31)),
         };
         const walkerStyle: CSSCustomProperties = {
           "--reduced-walk-x": `${
@@ -174,8 +111,7 @@ export default function WalkingCrowd() {
 
         return (
           <div
-            className="floo-crowd-parallax"
-            data-parallax-depth={depth}
+            className="floo-crowd-character"
             key={character.index}
             style={characterStyle}
           >
@@ -197,7 +133,6 @@ export default function WalkingCrowd() {
           </div>
         );
       })}
-      <div className="floo-crowd-fade absolute inset-0" />
     </div>
   );
 }
