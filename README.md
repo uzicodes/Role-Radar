@@ -20,6 +20,18 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Authentication
+
+The dashboard uses Clerk authentication. Configure these environment variables before starting the application:
+
+```env
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your-publishable-key
+CLERK_SECRET_KEY=your-secret-key
+ADMIN_EMAIL=admin@example.com
+```
+
+`ADMIN_EMAIL` is optional; the matching Clerk user is assigned the `ADMIN` role, while other users receive `USER`. Sign-in and sign-up are available at `/sign-in` and `/sign-up`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

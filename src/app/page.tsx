@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import Image from "next/image";
+import { UserButton } from "@clerk/nextjs";
 import { prisma } from "@/lib/prisma";
 import JobsInbox, { JobItem } from "@/components/JobsInbox";
+import { syncCurrentUser } from "@/lib/currentUser";
 
 function JobsSkeleton() {
   return (
@@ -58,6 +60,11 @@ async function JobsContent() {
   return <JobsInbox jobs={jobs} />;
 }
 
+async function CurrentUserSync() {
+  await syncCurrentUser();
+  return null;
+}
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#00403A] text-[#A4F002] flex flex-col font-sans selection:bg-[#A4F002]/30 selection:text-[#A4F002]">
@@ -84,12 +91,16 @@ export default function HomePage() {
               <span className="w-1.5 h-1.5 rounded-full bg-[#A4F002] animate-pulse" />
               <span>Live Pipeline</span>
             </span>
+            <UserButton />
           </div>
         </div>
       </header>
 
       {/* Main Dashboard Content Streamed via Suspense */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        <Suspense fallback={null}>
+          <CurrentUserSync />
+        </Suspense>
         <Suspense fallback={<JobsSkeleton />}>
           <JobsContent />
         </Suspense>
