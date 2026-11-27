@@ -3,6 +3,9 @@
 :root {
   --background: #00403A;
   --foreground: #A4F002;
+  --primary-green: #A4F002;
+  --green-highlight: #D7FF74;
+  --deep-green: #00403A;
 }
 
 @theme inline {
@@ -10,10 +13,245 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-caveat: var(--font-caveat-family);
 }
 
 body {
   background-color: #00403A;
   color: #A4F002;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@property --a {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes floo-orb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes floo-underline-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes floo-button-sweep {
+  0%,
+  60% {
+    left: -60%;
+  }
+
+  100% {
+    left: 130%;
+  }
+}
+
+@keyframes floo-caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes floo-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floo-border-rotate {
+  to {
+    --a: 360deg;
+  }
+}
+
+@keyframes floo-walk {
+  from {
+    transform: translate3d(var(--walk-from), 0, 0);
+  }
+
+  to {
+    transform: translate3d(var(--walk-to), 0, 0);
+  }
+}
+
+@keyframes floo-walker-bob {
+  from {
+    translate: 0 0;
+  }
+
+  to {
+    translate: 0 -3px;
+  }
+}
+
+.floo-ambient-orb {
+  animation: floo-orb-spin 52s linear infinite;
+  background: conic-gradient(
+    from 180deg,
+    var(--green-highlight),
+    var(--primary-green),
+    var(--deep-green),
+    var(--green-highlight)
+  );
+  border-radius: 9999px;
+  filter: blur(150px);
+  height: 760px;
+  left: 50%;
+  margin-left: -450px;
+  opacity: 0.28;
+  position: absolute;
+  top: -260px;
+  width: 900px;
+  will-change: transform;
+}
+
+.floo-rise {
+  animation: floo-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.floo-underline-path {
+  animation: floo-underline-draw 1s 0.35s ease-out forwards;
+}
+
+.floo-composer-vignette {
+  isolation: isolate;
+}
+
+.floo-composer-vignette::before {
+  z-index: -1;
+}
+
+.floo-primary-button {
+  background: linear-gradient(
+    180deg,
+    var(--green-highlight) 0%,
+    var(--primary-green) 48%,
+    #66B800 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 1px rgba(164, 240, 2, 0.6),
+    0 16px 40px -12px rgba(164, 240, 2, 0.75);
+  isolation: isolate;
+  overflow: hidden;
+  position: relative;
+}
+
+.floo-button-sheen {
+  animation: floo-button-sweep 4.5s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+  height: 180%;
+  left: -60%;
+  pointer-events: none;
+  position: absolute;
+  top: -40%;
+  transform: skewX(-20deg);
+  width: 42%;
+}
+
+.floo-composer-vignette::before {
+  background: radial-gradient(
+    closest-side,
+    rgba(0, 0, 0, 0.88),
+    transparent
+  );
+  content: "";
+  inset: -72px -90px;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+}
+
+.floo-composer-border {
+  animation: floo-border-rotate 7s linear infinite;
+  background: conic-gradient(
+    from var(--a),
+    rgba(255, 255, 255, 0.12) 0deg,
+    rgba(255, 255, 255, 0.12) 62%,
+    var(--green-highlight) 76%,
+    var(--primary-green) 83%,
+    var(--deep-green) 88%,
+    rgba(255, 255, 255, 0.12) 92%
+  );
+}
+
+.floo-caret {
+  animation: floo-caret-blink 1s step-end infinite;
+}
+
+.floo-crowd-fade {
+  background: linear-gradient(
+    180deg,
+    #000 0%,
+    rgba(0, 0, 0, 0.08) 28%,
+    transparent 47%,
+    rgba(0, 0, 0, 0.12) 80%,
+    #000 100%
+  );
+}
+
+.floo-crowd-parallax {
+  left: 0;
+  position: absolute;
+  transform: translate3d(var(--parallax-x, 0vw), 0, 0);
+  will-change: transform;
+}
+
+.floo-crowd-walker {
+  animation: floo-walk var(--walk-duration) linear infinite;
+  height: 100%;
+  position: relative;
+  width: 100%;
+  will-change: transform;
+}
+
+.floo-crowd-art {
+  animation: floo-walker-bob 0.7s ease-in-out infinite alternate;
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .floo-ambient-orb {
+    margin-left: -350px;
+    width: 700px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .floo-crowd-walker {
+    animation: none !important;
+    transform: translate3d(var(--reduced-walk-x), 0, 0);
+  }
+
+  .floo-crowd-art {
+    animation: none !important;
+  }
 }
