@@ -1,21 +1,14 @@
 import { Suspense } from "react";
 import { SignIn } from "@clerk/nextjs";
+import { clerkAuthAppearance } from "@/lib/clerkAuthAppearance";
 
 export default function SignInPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#0f172a] px-4 py-12">
+    <main className="clerk-auth-page flex min-h-screen items-center justify-center px-4 py-12">
       <Suspense fallback={null}>
         <SignIn
           signUpUrl="/sign-up"
-          appearance={{
-            variables: {
-              colorBackground: "#0f172a",
-              colorForeground: "#f8fafc",
-              colorInput: "#1e293b",
-              colorInputForeground: "#f8fafc",
-              colorPrimary: "#6366f1",
-            },
-          }}
+          appearance={clerkAuthAppearance}
         />
       </Suspense>
     </main>

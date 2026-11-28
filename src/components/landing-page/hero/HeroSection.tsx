@@ -3,7 +3,7 @@ import Navbar from "./navbar";
 
 export default function HeroSection() {
   return (
-    <main className="relative isolate min-h-screen w-full overflow-hidden bg-[#122315]">
+    <main className="relative isolate min-h-screen w-full overflow-hidden bg-[#00403A]">
       <Navbar />
       <section
         aria-labelledby="hero-heading"

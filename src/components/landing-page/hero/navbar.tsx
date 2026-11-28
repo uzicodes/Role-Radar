@@ -1,10 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Show,
-  SignInButton,
-  UserButton,
-} from "@clerk/nextjs";
+import { Suspense } from "react";
+import { Show, UserButton } from "@clerk/nextjs";
 
 const navigationLinks = [
   { href: "#how-it-works", label: "HOW IT WORK'S" },
@@ -24,7 +21,7 @@ const navigationTextStyle = {
 
 export default function Navbar() {
   return (
-    <header className="absolute inset-x-0 top-0 z-20 bg-[#122315]">
+    <header className="absolute inset-x-0 top-0 z-20 bg-[#00403A]">
       <nav
         aria-label="Main navigation"
         className="relative mx-auto flex h-[76px] w-full max-w-[1440px] items-center justify-between px-6"
@@ -59,27 +56,37 @@ export default function Navbar() {
         </div>
 
         <div className="ml-auto flex items-center gap-3">
-          <Show when="signed-out">
-            <SignInButton mode="modal" forceRedirectUrl="/dashboard">
-              <button
+          <Suspense
+            fallback={
+              <Link
                 className="inline-flex h-[42px] items-center justify-center rounded-[10px] border border-[#566053] px-4 transition-colors hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55DD4A]"
+                href="/sign-in"
                 style={navigationTextStyle}
-                type="button"
               >
                 LOGIN
-              </button>
-            </SignInButton>
-          </Show>
-          <Show when="signed-in">
-            <Link
-              className="inline-flex h-[42px] items-center justify-center rounded-[10px] border border-[#566053] px-4 transition-colors hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55DD4A]"
-              href="/dashboard"
-              style={navigationTextStyle}
-            >
-              DASHBOARD
-            </Link>
-            <UserButton />
-          </Show>
+              </Link>
+            }
+          >
+            <Show when="signed-out">
+              <Link
+                href="/sign-in"
+                style={navigationTextStyle}
+                className="inline-flex h-[42px] items-center justify-center rounded-[10px] border border-[#566053] px-4 transition-colors hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55DD4A]"
+              >
+                LOGIN
+              </Link>
+            </Show>
+            <Show when="signed-in">
+              <Link
+                className="inline-flex h-[42px] items-center justify-center rounded-[10px] border border-[#566053] px-4 transition-colors hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55DD4A]"
+                href="/dashboard"
+                style={navigationTextStyle}
+              >
+                DASHBOARD
+              </Link>
+              <UserButton />
+            </Show>
+          </Suspense>
         </div>
       </nav>
     </header>
