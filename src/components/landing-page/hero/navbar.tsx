@@ -1,5 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
+import {
+  Show,
+  SignInButton,
+  UserButton,
+} from "@clerk/nextjs";
 
 const navigationLinks = [
   { href: "#how-it-works", label: "HOW IT WORK'S" },
@@ -54,13 +59,27 @@ export default function Navbar() {
         </div>
 
         <div className="ml-auto flex items-center gap-3">
-          <Link
-            className="inline-flex h-[42px] items-center justify-center rounded-[10px] border border-[#566053] px-4 transition-colors hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55DD4A]"
-            href="/sign-in"
-            style={navigationTextStyle}
-          >
-            LOGIN
-          </Link>
+          <Show when="signed-out">
+            <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+              <button
+                className="inline-flex h-[42px] items-center justify-center rounded-[10px] border border-[#566053] px-4 transition-colors hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55DD4A]"
+                style={navigationTextStyle}
+                type="button"
+              >
+                LOGIN
+              </button>
+            </SignInButton>
+          </Show>
+          <Show when="signed-in">
+            <Link
+              className="inline-flex h-[42px] items-center justify-center rounded-[10px] border border-[#566053] px-4 transition-colors hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55DD4A]"
+              href="/dashboard"
+              style={navigationTextStyle}
+            >
+              DASHBOARD
+            </Link>
+            <UserButton />
+          </Show>
         </div>
       </nav>
     </header>

@@ -8,8 +8,14 @@ const isPublicRoute = createRouteMatcher([
   "/api/jobs/daily-digest(.*)",
   "/api/jobs/health(.*)",
 ]);
+const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) {
+    await auth.protect();
+    return;
+  }
+
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
